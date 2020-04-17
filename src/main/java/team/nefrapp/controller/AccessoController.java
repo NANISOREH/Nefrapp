@@ -1,30 +1,52 @@
-package team.nefrapp;
+package team.nefrapp.controller;
 
+import org.apache.commons.codec.binary.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
+import team.nefrapp.entity.Paziente;
+import team.nefrapp.repository.PazienteRepository;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import java.util.logging.Logger;
+
+import static team.nefrapp.security.PasswordManager.hashPassword;
+
 @Controller
 public class AccessoController {
+    @Autowired
+    private PazienteRepository repo;
+    Logger log = Logger.getLogger("AccessoController");
+
     @RequestMapping(value="/login", method = RequestMethod.POST)
     public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result) {
-        System.out.println("username:" + item.getCodiceFiscale() +
-                "\npassword:" + item.getPassword());
         if (result.hasErrors()) {
             return "paginaErrore";
         }
         else {
-            //confronto e prelievo dal db
-            //operazioni di sessione
-            return "dashboard";
+            Paziente p = repo.findByCodiceFiscale(item.getCodiceFiscale());
+            if (p != null && p.getCodiceFiscale()!= null) {
+                byte[] insertedPsw = hashPassword(item.getPassword(), p.getSalt());
+                if (Hex.encodeHexString(insertedPsw).equals(Hex.encodeHexString(p.getPassword()))) {
+                    log.info("Accesso effettuato");
+                    //gestisci dati di sessione
+                    return "dashboard";
+                } else {
+                    log.info("Accesso negato\n");
+                    log.info("pass retrieved " + Hex.encodeHexString(p.getPassword()));
+                    log.info("pass inserted " + Hex.encodeHexString(insertedPsw));
+                    return "login";
+                }
+            }
+            log.info("utente non trovato");
         }
+
+        return "login";
     }
 }
 
