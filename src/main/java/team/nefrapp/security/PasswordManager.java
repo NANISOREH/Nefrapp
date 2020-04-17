@@ -19,9 +19,9 @@ public class PasswordManager {
     private static Logger log = Logger.getLogger("pm");
 
     /**
-     * Hasha una stringa in chiaro, restituisce un arraylist contenente la stringa hashata (indice 0) e il salt usato (indice 1)
+     * Hasha una stringa in chiaro
      * @param plain
-     * @return
+     * @return un ArrayList di array di byte contenente la stringa hashata (indice 0) e il salt usato (indice 1)
      */
     public static ArrayList<byte[]> hashPassword(String plain) {
         ArrayList<byte[]> result = new ArrayList();
@@ -50,10 +50,10 @@ public class PasswordManager {
     }
 
     /**
-     * Hasha una stringa in chiaro, usando un hashing value passato in input
+     * Hasha una stringa in chiaro, usando un salt value passato in input
      * @param plain stringa in chiaro
-     * @param salt salt value da usare
-     * @return stringa hashata
+     * @param salt byte array con il salt value da usare
+     * @return byte array con la stringa hashata
      */
     public static byte[] hashPassword(String plain, byte[] salt) {
         KeySpec spec = new PBEKeySpec(plain.toCharArray(), salt, 65536, 128);

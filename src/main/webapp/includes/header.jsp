@@ -274,7 +274,7 @@
 				<div class="modal-footer">
 					<button class="btn btn-secondary" type="button"
 						data-dismiss="modal">Cancel</button>
-					<form action="./GestioneAccesso?operazione=logout" method="post">
+					<form action="/logout" method="post">
 						<button class="btn btn-primary">Logout</button>
 					</form>
 				</div>
@@ -283,6 +283,6 @@
 	</div>
 	
 	
-	<%@include file="../includes/avvisi.jsp"%>
+	<%@include file="/includes/avvisi.jsp"%>
 	
 					

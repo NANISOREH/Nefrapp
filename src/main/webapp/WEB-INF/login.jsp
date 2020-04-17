@@ -45,7 +45,8 @@
 												<h1 class="h4 text-gray-900 mb-4">Effettua il login</h1>
 											</div>
 											<form class="user" method="post" th:action="@{/login}" th:object="${formitem}">
-												<input type="hidden" name="operazione" value="loginUtente">
+												<input type="hidden" id="hashedpass" name="password"
+												value="loginUtente" th:field="*{password}">
 												<div class="form-group">
 													<input type="text" class="form-control form-control-user"
 														name="codiceFiscale" id="codiceFiscale"
@@ -55,9 +56,8 @@
 												</div>
 												<div class="form-group">
 													<input type="password"
-														class="form-control form-control-user" name="password"
+														class="form-control form-control-user"
 														id="password" placeholder="Password" required="required"
-														th:field="*{password}"
 														>
 												</div>
 												<div class="p-6">
@@ -94,6 +94,8 @@
 		class="fas fa-angle-up"></i>
 	</a>
 </body>
-
+<%@include file="/includes/scripts.jsp"%>
+<script src="/js/ParameterControl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 
 </html>

@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import team.nefrapp.entity.Paziente;
-import team.nefrapp.repository.PazienteRepository;
+import team.nefrapp.entity.Utente;
+import team.nefrapp.repository.UtenteRepository;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -20,26 +22,26 @@ import static team.nefrapp.security.PasswordManager.hashPassword;
 @Controller
 public class AccessoController {
     @Autowired
-    private PazienteRepository repo;
+    private UtenteRepository repo;
     Logger log = Logger.getLogger("AccessoController");
 
     @RequestMapping(value="/login", method = RequestMethod.POST)
-    public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result) {
+    public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result, HttpSession session) {
         if (result.hasErrors()) {
+            log.info(result.toString());
             return "paginaErrore";
         }
         else {
-            Paziente p = repo.findByCodiceFiscale(item.getCodiceFiscale());
+            Utente p = repo.findByCodiceFiscale(item.getCodiceFiscale());
             if (p != null && p.getCodiceFiscale()!= null) {
                 byte[] insertedPsw = hashPassword(item.getPassword(), p.getSalt());
                 if (Hex.encodeHexString(insertedPsw).equals(Hex.encodeHexString(p.getPassword()))) {
                     log.info("Accesso effettuato");
-                    //gestisci dati di sessione
+                    session.setAttribute("isPaziente", true);
+                    session.setAttribute("accessDone", true);
                     return "dashboard";
                 } else {
                     log.info("Accesso negato\n");
-                    log.info("pass retrieved " + Hex.encodeHexString(p.getPassword()));
-                    log.info("pass inserted " + Hex.encodeHexString(insertedPsw));
                     return "login";
                 }
             }
@@ -47,6 +49,12 @@ public class AccessoController {
         }
 
         return "login";
+    }
+
+    @RequestMapping(value="/logout", method = RequestMethod.POST)
+    public String logout (HttpSession session) {
+        session.invalidate();
+        return "dashboard";
     }
 }
 
@@ -58,8 +66,8 @@ class FormItem {
     private String codiceFiscale;
 
     @NotNull
-    @Size(min=8, max=20, message = "La password deve essere compresa tra 8 e 20 caratteri")
-    String password;
+    @Size(min=128, max=128)
+    private String password;
 
     public FormItem(String u, String p) {
         codiceFiscale = u;

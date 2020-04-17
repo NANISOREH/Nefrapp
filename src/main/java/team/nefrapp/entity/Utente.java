@@ -5,7 +5,7 @@ import javax.persistence.Id;
 
 //Entity di prova
 @Entity
-public class Paziente{
+public class Utente {
     @Id
     private String codiceFiscale;
     private byte[] password;
@@ -35,7 +35,7 @@ public class Paziente{
         this.codiceFiscale = codiceFiscale;
     }
 
-    public Paziente() {
+    public Utente() {
     }
 
     @Override

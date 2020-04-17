@@ -369,9 +369,7 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 	}
 
 	/**
-	 * Funzione che permette di eseguire la richiesta di login
-	 * dell'amministratore e degli altri utenti alla servlet però fa prima dei
-	 * controlli e se nella pagina è tutto ok invia i dati alla servlet
+	 * Fa submit del form di login e invoca la funzione di hashing della password.
 	 */
 
 	function loginValidator() {
@@ -383,6 +381,9 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 			} else {
 				sub = true;
 
+				var pass = $("#password").val();
+				$("#hashedpass").val(hashPassword(pass, $("#codiceFiscale").val()));
+				//alert($("#hashedpass").val());
 				$(document).submit();
 			}
 
@@ -403,6 +404,16 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 			}
 
 		});
+	}
+
+	function hashPassword(plain, salt) {
+		var key = CryptoJS.PBKDF2(plain, salt, {
+			keySize: 512 / 32,
+			iterations: 1000
+		});
+
+		var hashedPassword = CryptoJS.SHA3(key, { outputLength: 512 });
+		return hashedPassword;
 	}
 
 	/**
