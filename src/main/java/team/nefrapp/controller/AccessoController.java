@@ -25,6 +25,13 @@ public class AccessoController {
     private UtenteRepository repo;
     Logger log = Logger.getLogger("AccessoController");
 
+    /*PER SARA: puoi testare l'accesso all'utente barebone di prova con DWNRRT85E18I483W - password.
+    * Puoi usare localhost:8080/clean per pulire la table, localhost:8080/add per aggiungere quello stesso utente
+    * e controllare in console se l'hashing funziona come dovrebbe e localhost:8080/all per vedere lo stato della table.
+    * Siccome ho implementato client-side hashing, se vuoi aggiungere un utente diverso manualmente non basta mettere
+    * una password in chiaro, poi ti faccio vedere come ottenere il valore giusto, oppure aggiungo un piccolo jsp
+    * che lo faccia ez. Sì mi sa che faccio così.*/
+
     @RequestMapping(value="/login", method = RequestMethod.POST)
     public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result, HttpSession session) {
         if (result.hasErrors()) {

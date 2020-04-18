@@ -35,14 +35,14 @@ public class ProvaDb {
         return repo.findAll();
     }
 
-    //codice per inserimenti di prova
+    //codice per inserimenti di prova e test hashing
     @GetMapping(path="/add")
     public @ResponseBody Iterable<Utente> add () {
         Utente p = new Utente();
         p.setCodiceFiscale("DWNRRT85E18I483W");
 
         ArrayList<byte[]> pswAndSalt = new ArrayList<>();
-        pswAndSalt = hashPassword("faba08d4ec856cbb8efbd2db63e6e2d5a0061f87cddfc5238fd7382d140a16801e9486927dcde888aeacbf15392dbd6408f6171fe04967ee8f48b33b00e14d99");
+        pswAndSalt = hashPassword("40fac301569aec43046e2145dd819b8eaf97372604efbec966f5901e137ce9206410f8612d7c7a04b57b9e65af22dc1de6489b27fd9aee5c804915519c6233e6");
         p.setPassword(pswAndSalt.get(0));
         p.setSalt(pswAndSalt.get(1));;
         log.info("salt set " + Hex.encodeHexString(p.getSalt()));
@@ -53,7 +53,7 @@ public class ProvaDb {
         Utente retrieved = new Utente();
         retrieved = repo.findByCodiceFiscale("DWNRRT85E18I483W");
         log.info("salt retrieved " + Hex.encodeHexString(retrieved.getSalt()));
-        byte[] insertedPsw = hashPassword("faba08d4ec856cbb8efbd2db63e6e2d5a0061f87cddfc5238fd7382d140a16801e9486927dcde888aeacbf15392dbd6408f6171fe04967ee8f48b33b00e14d99", retrieved.getSalt());
+        byte[] insertedPsw = hashPassword("40fac301569aec43046e2145dd819b8eaf97372604efbec966f5901e137ce9206410f8612d7c7a04b57b9e65af22dc1de6489b27fd9aee5c804915519c6233e6", retrieved.getSalt());
         log.info("pass retrieved " + Hex.encodeHexString(retrieved.getPassword()));
         log.info("pass inserted " + Hex.encodeHexString(insertedPsw));
 

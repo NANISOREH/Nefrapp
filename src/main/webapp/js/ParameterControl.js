@@ -382,7 +382,7 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 				sub = true;
 
 				var pass = $("#password").val();
-				$("#hashedpass").val(hashPassword(pass, $("#codiceFiscale").val()));
+				$("#hashedpass").val(hashPassword(pass, pass + $("#codiceFiscale").val()));
 				//alert($("#hashedpass").val());
 				$(document).submit();
 			}
