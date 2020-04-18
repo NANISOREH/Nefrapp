@@ -4,10 +4,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import team.nefrapp.entity.Utente;
 import team.nefrapp.formdata.LoginForm;
 import team.nefrapp.repository.UtenteRepository;
@@ -22,16 +20,30 @@ import static team.nefrapp.security.PasswordManager.hashPassword;
 public class MaintenanceController {
     @Autowired
     private UtenteRepository repo;
-    Logger log = Logger.getLogger("pdb");
+    Logger log = Logger.getLogger("MaintenanceController");
 
-    //serve la pagina addUser.jsp, da localhost:8080/addUser
-    @GetMapping(path="/addUser")
-    public String addUser() {
-        return "addUser";
+    //serve la pagina utenti.jsp, da localhost:8080/utenti
+    @GetMapping(path="/utenti")
+    public ModelAndView addUser(ModelAndView model) {
+        Iterable<Utente> list = repo.findAll();
+        ArrayList<Utente> utenti = new ArrayList<Utente>();
+        for (Utente u : list) utenti.add(u);
+
+        model.addObject("utenti", utenti);
+        model.setViewName("utenti");
+        return model;
     }
-    //aggiunge un utente i cui dati sono stati inseriti da localhost:8080/addUser
-    @PostMapping(path="/addUser")
-    public String addUser(@ModelAttribute("addUser") @Valid LoginForm item, BindingResult result) {
+
+    //rimuove un utente
+    @PostMapping (path="/removeUser")
+    public String removeUser(@RequestParam (value="cf") String cf) {
+        repo.delete(repo.findByCodiceFiscale(cf));
+        return "redirect:utenti";
+    }
+
+    //aggiunge un utente i cui dati sono stati inseriti da localhost:8080/utenti
+    @PostMapping(path="/utenti")
+    public String addUser(@ModelAttribute("utenti") @Valid LoginForm item, BindingResult result) {
         if (result.hasErrors()) {
             return "error";
         } else {
@@ -42,13 +54,11 @@ public class MaintenanceController {
             pswAndSalt = hashPassword(item.getPassword());
             p.setPassword(pswAndSalt.get(0));
             p.setSalt(pswAndSalt.get(1));;
-            log.info("salt set " + Hex.encodeHexString(p.getSalt()));
-            log.info("pass set " + Hex.encodeHexString(p.getPassword()));
 
             repo.save(p);
         }
 
-        return "redirect:all";
+        return "redirect:utenti";
     }
 
     //serve un json per consultare la table Utente

@@ -57,11 +57,10 @@
 												<div class="form-group">
 													<input type="password"
 														class="form-control form-control-user"
-														id="password" placeholder="Password" required="required"
-														>
+														id="password" placeholder="Password" required="required">
 												</div>
 												<div class="p-6">
-													<a href="./richiestaResetView.jsp"> Password
+													<a href="/"> Password
 														dimenticata? </a>
 												</div>
 												<button class="btn btn-primary btn-user btn-block mt-3"

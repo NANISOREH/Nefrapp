@@ -29,7 +29,7 @@ public class AccessoController {
     * Siccome ho implementato anche client-side hashing per rendere la password in chiaro inaccessibile anche a noi,
     * se vuoi aggiungere un utente diverso manualmente non va bene inserire nel repository un Utente con una password in chiaro,
     * andrà inserito un valore già hashato.
-    * Ho creato un piccolo jsp accessibile con localhost:8080/addUser con cui puoi inserire utenti correttamente.*/
+    * Ho creato un piccolo jsp accessibile con localhost:8080/utenti con cui puoi inserire e rimuovere utenti correttamente.*/
 
     @RequestMapping(value="/login", method = RequestMethod.POST)
     public String login(@ModelAttribute("login") @Valid LoginForm item, BindingResult result, HttpSession session) {

@@ -22,7 +22,7 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 	var sub = false
 	checkNotifica();
 	$(document).ready(function() {
-
+		//html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		var button1 = $("#registrazioneMedicoButton")
 		var button2 = $("#accediAdminButton")
 		var button3 = $("#loginUtente")
@@ -383,7 +383,8 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 
 				var pass = $("#password").val();
 				$("#hashedpass").val(hashPassword(pass, pass + $("#codiceFiscale").val()));
-				//alert($("#hashedpass").val());
+				var dummy = "a".repeat(pass.length);
+				$("#password").val(dummy);
 				$(document).submit();
 			}
 
