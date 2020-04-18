@@ -25,12 +25,14 @@ public class AccessoController {
     private UtenteRepository repo;
     Logger log = Logger.getLogger("AccessoController");
 
-    /*PER SARA: puoi testare l'accesso all'utente barebone di prova con DWNRRT85E18I483W - password.
+    /*PER SARA: puoi testare l'accesso all'utente barebone di prova con DWNRRT85E18I483W - password. Il server è in remoto.
     * Puoi usare localhost:8080/clean per pulire la table, localhost:8080/add per aggiungere quello stesso utente
-    * e controllare in console se l'hashing funziona come dovrebbe e localhost:8080/all per vedere lo stato della table.
-    * Siccome ho implementato client-side hashing, se vuoi aggiungere un utente diverso manualmente non basta mettere
-    * una password in chiaro, poi ti faccio vedere come ottenere il valore giusto, oppure aggiungo un piccolo jsp
-    * che lo faccia ez. Sì mi sa che faccio così.*/
+    * e controllare in console se l'hashing server-side funziona come dovrebbe e localhost:8080/all per vedere lo stato della table.
+    *
+    * Siccome ho implementato anche client-side hashing per rendere la password in chiaro inaccessibile anche a noi,
+    * se vuoi aggiungere un utente diverso manualmente non va bene inserire nel repository un Utente con una password in chiaro,
+    * andrà inserito un valore già hashato. Per ottenere il valore hashato da usare per una determinata coppia cf-password, usa localhost:8080/hash.
+    * Inserisci cf e password desiderata e la password hashata sarà in un alert.*/
 
     @RequestMapping(value="/login", method = RequestMethod.POST)
     public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result, HttpSession session) {

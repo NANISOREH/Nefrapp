@@ -14,10 +14,16 @@ import java.util.logging.Logger;
 import static team.nefrapp.security.PasswordManager.hashPassword;
 
 @Controller
-public class ProvaDb {
+public class MaintenanceController {
     @Autowired
     private UtenteRepository repo;
     Logger log = Logger.getLogger("pdb");
+
+
+    @GetMapping(path="/hash")
+    public String clientSideHash() {
+        return "hash";
+    }
 
     //codice per consultazione di prova
     @GetMapping(path="/all")
