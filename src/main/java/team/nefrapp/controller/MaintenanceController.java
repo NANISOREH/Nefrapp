@@ -3,11 +3,16 @@ package team.nefrapp.controller;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import team.nefrapp.entity.Utente;
+import team.nefrapp.formdata.LoginForm;
 import team.nefrapp.repository.UtenteRepository;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -19,13 +24,34 @@ public class MaintenanceController {
     private UtenteRepository repo;
     Logger log = Logger.getLogger("pdb");
 
+    //serve la pagina addUser.jsp, da localhost:8080/addUser
+    @GetMapping(path="/addUser")
+    public String addUser() {
+        return "addUser";
+    }
+    //aggiunge un utente i cui dati sono stati inseriti da localhost:8080/addUser
+    @PostMapping(path="/addUser")
+    public String addUser(@ModelAttribute("addUser") @Valid LoginForm item, BindingResult result) {
+        if (result.hasErrors()) {
+            return "error";
+        } else {
+            Utente p = new Utente();
+            p.setCodiceFiscale(item.getCodiceFiscale());
 
-    @GetMapping(path="/hash")
-    public String clientSideHash() {
-        return "hash";
+            ArrayList<byte[]> pswAndSalt = new ArrayList<>();
+            pswAndSalt = hashPassword(item.getPassword());
+            p.setPassword(pswAndSalt.get(0));
+            p.setSalt(pswAndSalt.get(1));;
+            log.info("salt set " + Hex.encodeHexString(p.getSalt()));
+            log.info("pass set " + Hex.encodeHexString(p.getPassword()));
+
+            repo.save(p);
+        }
+
+        return "redirect:all";
     }
 
-    //codice per consultazione di prova
+    //serve un json per consultare la table Utente
     @GetMapping(path="/all")
     public @ResponseBody
     Iterable<Utente> getAllUsers() {
@@ -33,7 +59,7 @@ public class MaintenanceController {
         return repo.findAll();
     }
 
-    //codice per pulizia di prova
+    //svuota la tabella Utente e serve un json per consultarla
     @GetMapping(path="/clean")
     public @ResponseBody Iterable<Utente> removeAllUsers() {
         // This returns a JSON or XML with the users
@@ -41,7 +67,8 @@ public class MaintenanceController {
         return repo.findAll();
     }
 
-    //codice per inserimenti di prova e test hashing
+    //fa un inserimento predeterminato di prova e segue il rehashing della password con il Logger,
+    //poi serve un json per consultare la tabella Utente
     @GetMapping(path="/add")
     public @ResponseBody Iterable<Utente> add () {
         Utente p = new Utente();

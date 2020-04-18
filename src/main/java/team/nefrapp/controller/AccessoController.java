@@ -6,14 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import team.nefrapp.entity.Utente;
+import team.nefrapp.formdata.LoginForm;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 import java.util.logging.Logger;
 
@@ -31,14 +28,14 @@ public class AccessoController {
     *
     * Siccome ho implementato anche client-side hashing per rendere la password in chiaro inaccessibile anche a noi,
     * se vuoi aggiungere un utente diverso manualmente non va bene inserire nel repository un Utente con una password in chiaro,
-    * andrà inserito un valore già hashato. Per ottenere il valore hashato da usare per una determinata coppia cf-password, usa localhost:8080/hash.
-    * Inserisci cf e password desiderata e la password hashata sarà in un alert.*/
+    * andrà inserito un valore già hashato.
+    * Ho creato un piccolo jsp accessibile con localhost:8080/addUser con cui puoi inserire utenti correttamente.*/
 
     @RequestMapping(value="/login", method = RequestMethod.POST)
-    public String login(@ModelAttribute("login") @Valid FormItem item, BindingResult result, HttpSession session) {
+    public String login(@ModelAttribute("login") @Valid LoginForm item, BindingResult result, HttpSession session) {
         if (result.hasErrors()) {
             log.info(result.toString());
-            return "paginaErrore";
+            return "error";
         }
         else {
             Utente p = repo.findByCodiceFiscale(item.getCodiceFiscale());
@@ -64,40 +61,5 @@ public class AccessoController {
     public String logout (HttpSession session) {
         session.invalidate();
         return "dashboard";
-    }
-}
-
-class FormItem {
-    @NotNull
-    @Size(min=16, max=16)
-    @Pattern(regexp = "^[a-zA-Z]{6}[0-9]{2}[abcdehlmprstABCDEHLMPRST]{1}[0-9]{2}([a-zA-Z]{1}[0-9]{3})[a-zA-Z]{1}$",
-    message = "Inserire un Codice Fiscale valido")
-    private String codiceFiscale;
-
-    @NotNull
-    @Size(min=128, max=128)
-    private String password;
-
-    public FormItem(String u, String p) {
-        codiceFiscale = u;
-        password = p;
-    }
-
-    public FormItem(){}
-
-    public String getCodiceFiscale() {
-        return codiceFiscale;
-    }
-
-    public void setCodiceFiscale(String codiceFiscale) {
-        this.codiceFiscale = codiceFiscale;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
