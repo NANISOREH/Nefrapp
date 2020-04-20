@@ -1,4 +1,4 @@
-package team.nefrapp.resources;
+package team.nefrapp.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 

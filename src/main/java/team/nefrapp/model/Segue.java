@@ -1,21 +1,22 @@
-package team.nefrapp.resources;
+package team.nefrapp.model;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="Compila")
-public class Compila {
+@Table(name="segue")
+public class Segue {
 	
 	@Id
 	@Column(name="codiceFiscalePaziente")
 	private String codiceFiscalePaziente;
-	@Column(name="codiceScheda")
-	private String codiceScheda;
+	@Column(name="codiceFiscaleMedico")
+	private String codiceFiscaleMedico;
 	
 	
-	public Compila() {
+	public Segue() {
 		super();
 	}
 	public String getCodiceFiscalePaziente() {
@@ -24,17 +25,17 @@ public class Compila {
 	public void setCodiceFiscalePaziente(String codiceFiscalePaziente) {
 		this.codiceFiscalePaziente = codiceFiscalePaziente;
 	}
-	public String getCodiceScheda() {
-		return codiceScheda;
+	public String getCodiceFiscaleMedico() {
+		return codiceFiscaleMedico;
 	}
-	public void setCodiceScheda(String codiceScheda) {
-		this.codiceScheda = codiceScheda;
+	public void setCodiceFiscaleMedico(String codiceFiscaleMedico) {
+		this.codiceFiscaleMedico = codiceFiscaleMedico;
 	}
 	@Override
 	public String toString() {
-		return "Compila [codiceFiscalePaziente=" + codiceFiscalePaziente + ", codiceScheda=" + codiceScheda + "]";
+		return "Segue [codiceFiscalePaziente=" + codiceFiscalePaziente + ", codiceFiscaleMedico=" + codiceFiscaleMedico
+				+ "]";
 	}
 	
 	
-
 }

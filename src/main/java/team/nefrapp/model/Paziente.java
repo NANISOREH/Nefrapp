@@ -1,4 +1,4 @@
-package team.nefrapp.resources;
+package team.nefrapp.model;
 
 import java.time.LocalDate;
 
