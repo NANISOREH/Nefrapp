@@ -44,14 +44,13 @@
 											<div class="text-center">
 												<h1 class="h4 text-gray-900 mb-4">Effettua il login</h1>
 											</div>
-											<form class="user" method="post" th:action="@{/login}" th:object="${formitem}">
+											<form class="user" method="post" action="/login">
 												<input type="hidden" id="hashedpass" name="password"
-												value="loginUtente" th:field="*{password}">
+												value="loginUtente">
 												<div class="form-group">
 													<input type="text" class="form-control form-control-user"
-														name="codiceFiscale" id="codiceFiscale"
+														name="username" id="codiceFiscale"
 														placeholder="Codice fiscale" required="required"
-														 th:field="*{codiceFiscale}"
 														>
 												</div>
 												<div class="form-group">
@@ -96,5 +95,4 @@
 <%@include file="/includes/scripts.jsp"%>
 <script src="/js/ParameterControl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-
 </html>

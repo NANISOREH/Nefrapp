@@ -28,7 +28,7 @@
 
 			<div class="sidebar-heading">Area Personale</div>
 			<li class="nav-item"><a class="nav-link"
-				href="./GestionePaziente?operazione=visualizzaProfilo"> <i
+				href="/profilo"> <i
 					class="fas fa-fw fa-tachometer-alt"></i> <span>Dati
 						Anagrafici</span></a></li>
 			<hr class="sidebar-divider">
@@ -121,7 +121,7 @@
 	<!--  <li class="nav-item"><a class="nav-link" href="#"> <i
 			class="fas fa-fw fa-tachometer-alt"></i> <span>Conosci il
 				prodotto</span></a></li>-->
-	<li class="nav-item"><a class="nav-link" href="./team"> <i
+	<li class="nav-item"><a class="nav-link" href="/team"> <i
 			class="fas fa-fw fa-tachometer-alt"></i> <span>Conosci il
 				team!</span>
 	</a></li>
@@ -172,11 +172,6 @@
 	<!-- Divider -->
 	<hr class="sidebar-divider d-none d-md-block">
 
-	<!-- Sidebar Toggler (Sidebar) -->
-	<!-- 		<div class="text-center d-none d-md-inline"> -->
-	<!-- 			<button class="rounded-circle border-0" id="sidebarToggle"></button> -->
-	<!-- 		</div> -->
-	<!-- Sidebar Toggler (Sidebar) -->
 	<div class="text-center d-none d-md-inline">
 		<button class="rounded-circle border-0" id="sidebarToggle"></button>
 	</div>

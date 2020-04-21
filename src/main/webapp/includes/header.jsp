@@ -57,7 +57,7 @@
 						Inserimento Scheda Parametri</a>
 
 					<a class="dropdown-item"
-						href="./parametri?operazione=visualizzaScheda"> 
+						href="./parametri?operazione=visualizzaScheda">
 						Visualizza Schede Parametri</a>
 
 					<a class="dropdown-item"
@@ -68,7 +68,7 @@
 					<div class="sidebar-heading">Area Comunicazioni</div>
 
 					<a class="dropdown-item"
-						href="./messaggio?operazione=caricaDestinatariMessaggio"> 
+						href="./messaggio?operazione=caricaDestinatariMessaggio">
 						Invia Messaggio</a>
 
 					<a class="dropdown-item"
@@ -76,7 +76,7 @@
 						Leggi Messaggi</a>
 
 					<a class="dropdown-item"
-						href="./annuncio?operazione=visualizzaPersonali"> 
+						href="./annuncio?operazione=visualizzaPersonali">
 						Leggi Annunci</a>
 				</c:when>
 				
@@ -104,7 +104,7 @@
 					</a>
 					
 					<a class="dropdown-item"
-						href="./messaggio?operazione=visualizzaElencoMessaggio"> 
+						href="./messaggio?operazione=visualizzaElencoMessaggio">
 						Leggi Messaggio</a>
 	
 					<a class="dropdown-item"
@@ -219,7 +219,7 @@
 							aria-labelledby="userDropdown">
 							<c:if test="${isPaziente}">
 								<a class="dropdown-item"
-									href="./GestionePaziente?operazione=visualizzaProfilo"> <i
+									href="#"> <i
 									class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profilo
 									Utente
 								</a>

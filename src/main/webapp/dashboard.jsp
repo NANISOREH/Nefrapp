@@ -163,7 +163,7 @@
 
 										</div>
 										<div class="col-sm-12 mb-3 d-flex justify-content-center">
-											<a href="./annuncio?operazione=caricaDestinatariAnnuncio"
+											<a href="/annuncio?operazione=caricaDestinatariAnnuncio"
 												class="btn btn-primary btn-user btn-circle btn-xl"><i
 												class="fas fa-file-medical"></i></a>
 										</div>

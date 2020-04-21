@@ -50,7 +50,7 @@
 	            					Oh, no! È saltato il database! Ci stanno tracciando! Stacca stacca!
             					</c:if>
 								</p>
-            					<a href="dashboard.jsp">&larr; Torna alla dashboard</a>
+            					<a href="/dashboard">&larr; Torna alla dashboard</a>
           					</div>
 	                </div>
 	                <!-- /.container-fluid -->

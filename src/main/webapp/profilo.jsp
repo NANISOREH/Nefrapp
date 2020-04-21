@@ -13,11 +13,11 @@
 <meta name="author" content="Silvio Di Martino">
 <title>Profilo - Nefrapp</title>
 
-<%@include file="./includes/cssLinks.jsp"%>
+<%@include file="/includes/cssLinks.jsp"%>
 
 <!-- DatePicker -->
 <link rel="stylesheet" type="text/css"
-	href="./css/bootstrap-datepicker.css">
+	href="/css/bootstrap-datepicker.css">
 
 <!-- Script per la registrazione -->
 
@@ -56,14 +56,14 @@
 
 	<!-- Page Wrapper -->
 	<div id="wrapper">
-		<%@include file="../includes/sidebar.jsp"%>
+		<%@include file="/includes/sidebar.jsp"%>
 
 		<!-- Content Wrapper -->
 		<div id="content-wrapper" class="d-flex flex-column">
 
 			<!-- Main Content -->
 			<div id="content">
-				<%@include file="../includes/header.jsp"%>
+				<%@include file="/includes/header.jsp"%>
 
 				<!-- Begin Page Content -->
 				<div class="container-fluid">
@@ -166,7 +166,7 @@
 
 				</div>
 				<!-- End of Main Content -->
-				<%@include file="../includes/footer.jsp"%>
+				<%@include file="/includes/footer.jsp"%>
 			</div>
 			<!-- End of Content Wrapper -->
 
@@ -224,8 +224,8 @@
 		</div>
 	</div>
 </body>
-<%@include file="./includes/scripts.jsp"%>
-<script type="text/javascript" src="./js/bootstrap-datepicker.js"></script>
-<script src="./js/dataPicker.js"></script>
+<%@include file="/includes/scripts.jsp"%>
+<script type="text/javascript" src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/dataPicker.js"></script>
 
 </html>

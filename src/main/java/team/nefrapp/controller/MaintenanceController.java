@@ -2,6 +2,7 @@ package team.nefrapp.controller;
 
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import team.nefrapp.formdata.LoginForm;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.validation.Valid;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -21,6 +23,12 @@ public class MaintenanceController {
     @Autowired
     private UtenteRepository repo;
     Logger log = Logger.getLogger("MaintenanceController");
+
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public MaintenanceController(BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
 
     //serve la pagina utenti.jsp, da localhost:8080/utenti
     @GetMapping(path="/utenti")
@@ -50,7 +58,7 @@ public class MaintenanceController {
             Utente p = new Utente();
             p.setCodiceFiscale(item.getCodiceFiscale());
 
-            ArrayList<byte[]> pswAndSalt = new ArrayList<>();
+            ArrayList<String> pswAndSalt = new ArrayList<>();
             pswAndSalt = hashPassword(item.getPassword());
             p.setPassword(pswAndSalt.get(0));
             p.setSalt(pswAndSalt.get(1));;
@@ -84,22 +92,33 @@ public class MaintenanceController {
         Utente p = new Utente();
         p.setCodiceFiscale("DWNRRT85E18I483W");
 
-        ArrayList<byte[]> pswAndSalt = new ArrayList<>();
+        ArrayList<String> pswAndSalt = new ArrayList<>();
         pswAndSalt = hashPassword("40fac301569aec43046e2145dd819b8eaf97372604efbec966f5901e137ce9206410f8612d7c7a04b57b9e65af22dc1de6489b27fd9aee5c804915519c6233e6");
         p.setPassword(pswAndSalt.get(0));
         p.setSalt(pswAndSalt.get(1));;
-        log.info("salt set " + Hex.encodeHexString(p.getSalt()));
-        log.info("pass set " + Hex.encodeHexString(p.getPassword()));
+        log.info("salt set " + p.getSalt());
+        log.info("pass set " + (p.getPassword()));
 
         repo.save(p);
 
         Utente retrieved = new Utente();
         retrieved = repo.findByCodiceFiscale("DWNRRT85E18I483W");
-        log.info("salt retrieved " + Hex.encodeHexString(retrieved.getSalt()));
-        byte[] insertedPsw = hashPassword("40fac301569aec43046e2145dd819b8eaf97372604efbec966f5901e137ce9206410f8612d7c7a04b57b9e65af22dc1de6489b27fd9aee5c804915519c6233e6", retrieved.getSalt());
-        log.info("pass retrieved " + Hex.encodeHexString(retrieved.getPassword()));
-        log.info("pass inserted " + Hex.encodeHexString(insertedPsw));
+        log.info("salt retrieved " + retrieved.getSalt());
+        String insertedPsw = hashPassword("40fac301569aec43046e2145dd819b8eaf97372604efbec966f5901e137ce9206410f8612d7c7a04b57b9e65af22dc1de6489b27fd9aee5c804915519c6233e6", retrieved.getSalt());
+        log.info("pass retrieved " + retrieved.getPassword());
+        log.info("pass inserted " + insertedPsw);
 
         return repo.findAll();
     }
+
+    @GetMapping(path="/trysignup")
+    public void trySignUp() {
+        Utente user = new Utente();
+        user.setPassword("deb386df89dd278f34e5222a7742bacff8f86bd3a4eb3386357bece118d6022f37c4bfef16a72c002c8e3362721caedc1af7ebc685c734a6c96aac5da3608817");
+        user.setCodiceFiscale("PNTDNC03D08D969G");
+        user.setAuthorities("ROLE_PAZIENTE");
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        repo.save(user);
+    }
+
 }

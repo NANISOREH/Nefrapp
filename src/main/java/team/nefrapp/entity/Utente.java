@@ -1,5 +1,7 @@
 package team.nefrapp.entity;
 
+import java.lang.String;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -8,23 +10,32 @@ import javax.persistence.Id;
 public class Utente {
     @Id
     private String codiceFiscale;
-    private byte[] password;
-    private byte[] salt;
+    private String password;
+    private String salt;
+    private String authorities;
 
-    public byte[] getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    public void setPassword(byte[] password) {
+    public void setPassword(String password) {
         this.password = password;
     }
 
-    public byte[] getSalt() {
+    public String getSalt() {
         return salt;
     }
 
-    public void setSalt(byte[] salt) {
+    public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    public String getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(String authorities) {
+        this.authorities = authorities;
     }
 
     public String getCodiceFiscale() {
