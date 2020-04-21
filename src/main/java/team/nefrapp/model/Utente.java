@@ -1,18 +1,21 @@
-package team.nefrapp.entity;
+package team.nefrapp.model;
+
+import org.hibernate.annotations.Type;
 
 import java.lang.String;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
-//Entity di prova
 @Entity
 public class Utente {
     @Id
     private String codiceFiscale;
     private String password;
-    private String salt;
-    private String authorities;
+    @Enumerated(EnumType.STRING)
+    private Authorities authorities;
 
     public String getPassword() {
         return password;
@@ -22,20 +25,13 @@ public class Utente {
         this.password = password;
     }
 
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
-    }
-
     public String getAuthorities() {
-        return authorities;
+        return authorities.toString();
     }
+
 
     public void setAuthorities(String authorities) {
-        this.authorities = authorities;
+        this.authorities = Enum.valueOf(Authorities.class, authorities);
     }
 
     public String getCodiceFiscale() {
@@ -51,10 +47,19 @@ public class Utente {
 
     @Override
     public String toString() {
-        return "Paziente{" +
+        return "Utente{" +
                 "codiceFiscale='" + codiceFiscale + '\'' +
                 ", password='" + password + '\'' +
-                ", salt='" + salt + '\'' +
+                ", authorities='" + authorities + '\'' +
                 '}';
     }
 }
+
+enum Authorities {
+    ROLE_PAZIENTE{},
+
+    ROLE_MEDICO{},
+
+    ROLE_ADMIN{}
+}
+

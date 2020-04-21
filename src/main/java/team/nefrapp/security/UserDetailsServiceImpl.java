@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import team.nefrapp.entity.Utente;
+import team.nefrapp.model.Utente;
 import team.nefrapp.repository.UtenteRepository;
 
 import java.util.ArrayList;

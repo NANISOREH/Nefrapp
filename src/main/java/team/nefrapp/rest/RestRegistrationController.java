@@ -1,20 +1,18 @@
 package team.nefrapp.rest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import team.nefrapp.entity.Utente;
+import team.nefrapp.model.Utente;
 import team.nefrapp.repository.UtenteRepository;
 
 @RestController
 @RequestMapping("/users")
-public class RegistrationController {
+public class RestRegistrationController {
     private UtenteRepository applicationUserRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public RegistrationController(UtenteRepository applicationUserRepository,
-                                  BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public RestRegistrationController(UtenteRepository applicationUserRepository,
+                                      BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.applicationUserRepository = applicationUserRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
