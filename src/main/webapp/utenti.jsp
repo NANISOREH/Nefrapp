@@ -22,7 +22,7 @@
         <div class="form-group">
               <select title="Ruolo" name="role">
                 <option value="ROLE_MEDICO">Medico</option>
-                <option value="ROLE_MEDICO">Paziente</option>
+                <option value="ROLE_PAZIENTE">Paziente</option>
                 <option value="ROLE_ADMIN">Amministratore</option>
               </select>
         </div>
@@ -36,21 +36,12 @@
          ${item.codiceFiscale}
          ${item.password}
          ${item.authorities}
-             <form class="user" method="post" id="removebycf" name="removebycf" action="/removeUser">
-                 <input type="hidden" id="cf" name="cf"
-                         value="${item.codiceFiscale}" ">
-                 <button onclick="submit()" class="btn btn-primary btn-user btn-block mt-3"
-                     id="rem">Rimuovi</button>
-             </form>
-         <br>
+         <br><br>
   </c:forEach>
+
   </body>
   <%@include file="/includes/scripts.jsp"%>
-  <script>
-  function submit() {
-    $(document).submit();
-  }
-  </script>
+  <script src = "/js/utenti.js"></script>
   <script src="/js/ParameterControl.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 </html>

@@ -28,6 +28,13 @@ public class RestLoginController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    /**
+     * Ottiene un token di autenticazione JWT se le credenziali in input sono corrette
+     * @param authData Map di stringhe contenente i dati di autenticazione
+     * @return
+     * @throws AuthenticationException
+     * @throws JsonProcessingException
+     */
     @RequestMapping(value = "/auth", method = RequestMethod.POST)
     public @ResponseBody String createAuthenticationToken(@RequestBody LinkedMultiValueMap<String, String> authData) throws AuthenticationException, JsonProcessingException {
         String user = authData.getFirst("username");
@@ -36,7 +43,7 @@ public class RestLoginController {
         u.setCodiceFiscale(user);
         u = repo.findByCodiceFiscale(u.getCodiceFiscale());
 
-        SimpleGrantedAuthority s = new SimpleGrantedAuthority(u.getAuthorities());
+        SimpleGrantedAuthority s = new SimpleGrantedAuthority(u.getAuthorities().toString());
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(s);
 

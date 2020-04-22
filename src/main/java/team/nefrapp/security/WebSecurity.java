@@ -29,7 +29,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         protected void configure(HttpSecurity http) throws Exception {
                     http.cors().and().csrf().disable().authorizeRequests()
                     .antMatchers(HttpMethod.POST, "/login", "/trysignup", "/auth", "/utenti").permitAll()
-                    .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/all", "/utenti", "/trysignup",
+                    .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/all", "/clean", "/utenti", "/trysignup",
                             "/js/*", "/includes/*", "/css/*", "/img/*", "/vendor/*", "/vendor/fontawesome-free/css/", "/nuget/*", "/scss/*",
                             "/themes/fa", "/themes/fas").permitAll()
                             .anyRequest().authenticated()

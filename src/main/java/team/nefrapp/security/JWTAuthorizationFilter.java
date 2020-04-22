@@ -18,6 +18,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * Filtro di autorizzazione inserito nella filter chain di Spring Security.
+ * Si occupa di intercettare il token dalla request e usarlo per autorizzare ogni richiesta al container.
+ */
 @Order(0)
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -25,13 +29,19 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         super(authManager);
     }
 
+    /**
+     * Logica del filtro. Preleva il token dalla request (se presente) e contatta il SecurityContext per settare l'autenticazione
+     * @param res
+     * @param chain
+     * @throws IOException
+     * @throws ServletException
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
 
         String header = null;
-
         Cookie[] cookies = req.getCookies();
         if (cookies == null || cookies.length == 1) {
             chain.doFilter(req, res);
@@ -56,6 +66,13 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         return;
     }
 
+    /**
+     * Si occupa di parsare la stringa token per ottenere le effettive credenziali dell'oggetto JWT.
+     * Se la stringa token ricevuta è valida, restituisce un oggetto UsernamePasswordAuthenticationToken,
+     * utilizzabile dal SecurityContext per autorizzare la richiesta.
+     * @param token
+     * @return
+     */
     private UsernamePasswordAuthenticationToken getAuthentication(String token) {
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
         if (token != null) {

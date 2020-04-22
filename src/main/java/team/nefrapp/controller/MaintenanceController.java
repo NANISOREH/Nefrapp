@@ -5,7 +5,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import team.nefrapp.model.Amministratore;
+import team.nefrapp.model.Medico;
+import team.nefrapp.model.Paziente;
 import team.nefrapp.model.Utente;
+import team.nefrapp.repository.AmministratoreRepository;
+import team.nefrapp.repository.MedicoRepository;
+import team.nefrapp.repository.PazienteRepository;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +23,13 @@ import java.util.logging.Logger;
 public class MaintenanceController {
     @Autowired
     private UtenteRepository repo;
+    @Autowired
+    private PazienteRepository pazRepo;
+    @Autowired
+    private MedicoRepository medRepo;
+    @Autowired
+    private AmministratoreRepository admRepo;
+
     Logger log = Logger.getLogger("MaintenanceController");
 
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -37,27 +50,48 @@ public class MaintenanceController {
         return model;
     }
 
-    //rimuove un utente
-    @PostMapping (path="/removeUser")
-    public String removeUser(@RequestParam (value="cf") String cf) {
-        repo.delete(repo.findByCodiceFiscale(cf));
+    @GetMapping(path="/clean")
+    public String cleanTable(){
+        log.info("ci entri");
+        repo.deleteAll();
         return "redirect:utenti";
     }
 
     //aggiunge un utente i cui dati sono stati inseriti da localhost:8080/utenti
     @PostMapping(path="/utenti")
-    public String addUser(HttpServletRequest req, HttpServletResponse res) {
-        String cf = req.getParameter("codiceFiscale");
-        String password = req.getParameter("password");
-        String role = req.getParameter("role");
+    public String addUser(@RequestParam (value="codiceFiscale") String cf,
+                          @RequestParam (value="password") String password,
+                          @RequestParam (value="role") String role) {
 
-        Utente user = new Utente();
-        user.setAuthorities(role);
-        user.setPassword(bCryptPasswordEncoder.encode(password));
-        user.setCodiceFiscale(cf);
+        Paziente p = null;
+        Medico m = null;
+        Amministratore a = null;
 
-        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()))
-            repo.save(user);
+        if (!repo.existsByCodiceFiscale(cf)) {
+            switch (role) {
+                case "ROLE_PAZIENTE":
+                    p = new Paziente();
+                    p.setAuthorities(role);
+                    p.setPassword(bCryptPasswordEncoder.encode(password));
+                    p.setCodiceFiscale(cf);
+                    pazRepo.save(p);
+                    break;
+                case "ROLE_MEDICO":
+                    m = new Medico();
+                    m.setAuthorities(role);
+                    m.setPassword(bCryptPasswordEncoder.encode(password));
+                    m.setCodiceFiscale(cf);
+                    medRepo.save(m);
+                    break;
+                case "ROLE_ADMIN":
+                    a = new Amministratore();
+                    a.setAuthorities(role);
+                    a.setPassword(bCryptPasswordEncoder.encode(password));
+                    a.setCodiceFiscale(cf);
+                    admRepo.save(a);
+                    break;
+            }
+        }
 
         return "redirect:utenti";
     }
