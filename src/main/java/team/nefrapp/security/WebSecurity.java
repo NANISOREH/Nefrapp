@@ -28,10 +28,11 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
                     http.cors().and().csrf().disable().authorizeRequests()
-                    .antMatchers(HttpMethod.POST, "/login", "/trysignup", "/auth", "/utenti").permitAll()
-                    .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/all", "/clean", "/utenti", "/trysignup",
+                    .antMatchers(HttpMethod.POST, "/login", "/sign-up", "/auth", "/utenti").permitAll()
+                    .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/all", "/clean", "/utenti",
                             "/js/*", "/includes/*", "/css/*", "/img/*", "/vendor/*", "/vendor/fontawesome-free/css/", "/nuget/*", "/scss/*",
                             "/themes/fa", "/themes/fas").permitAll()
+                    .antMatchers(HttpMethod.PUT, "/sign-up").permitAll()
                             .anyRequest().authenticated()
                     .and()
                     .addFilter(new JWTAuthorizationFilter(authenticationManager()))

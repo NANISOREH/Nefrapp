@@ -9,4 +9,5 @@ import team.nefrapp.model.Utente;
 public interface PazienteRepository extends CrudRepository<Paziente, Integer> {
     boolean existsByCodiceFiscale(String cf);
     Paziente findByCodiceFiscale(String cf);
+    void deleteByCodiceFiscale(String cf);
 }

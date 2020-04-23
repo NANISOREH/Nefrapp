@@ -7,4 +7,5 @@ import team.nefrapp.model.Utente;
 public interface UtenteRepository extends CrudRepository<Utente, Integer> {
     boolean existsByCodiceFiscale(String cf);
     Utente findByCodiceFiscale(String cf);
+    void deleteByCodiceFiscale(String cf);
 }

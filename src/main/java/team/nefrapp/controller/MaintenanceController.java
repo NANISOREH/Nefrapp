@@ -1,9 +1,12 @@
 package team.nefrapp.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.ModelAndView;
 import team.nefrapp.model.Amministratore;
 import team.nefrapp.model.Medico;
@@ -23,12 +26,6 @@ import java.util.logging.Logger;
 public class MaintenanceController {
     @Autowired
     private UtenteRepository repo;
-    @Autowired
-    private PazienteRepository pazRepo;
-    @Autowired
-    private MedicoRepository medRepo;
-    @Autowired
-    private AmministratoreRepository admRepo;
 
     Logger log = Logger.getLogger("MaintenanceController");
 
@@ -66,33 +63,35 @@ public class MaintenanceController {
         Paziente p = null;
         Medico m = null;
         Amministratore a = null;
+        RestTemplate rt = new RestTemplate();
+        HttpStatus result = null;
 
-        if (!repo.existsByCodiceFiscale(cf)) {
-            switch (role) {
-                case "ROLE_PAZIENTE":
-                    p = new Paziente();
-                    p.setAuthorities(role);
-                    p.setPassword(bCryptPasswordEncoder.encode(password));
-                    p.setCodiceFiscale(cf);
-                    pazRepo.save(p);
-                    break;
-                case "ROLE_MEDICO":
-                    m = new Medico();
-                    m.setAuthorities(role);
-                    m.setPassword(bCryptPasswordEncoder.encode(password));
-                    m.setCodiceFiscale(cf);
-                    medRepo.save(m);
-                    break;
-                case "ROLE_ADMIN":
-                    a = new Amministratore();
-                    a.setAuthorities(role);
-                    a.setPassword(bCryptPasswordEncoder.encode(password));
-                    a.setCodiceFiscale(cf);
-                    admRepo.save(a);
-                    break;
-            }
+        switch (role) {
+            case "ROLE_PAZIENTE":
+                p = new Paziente();
+                p.setAuthorities(role);
+                p.setPassword(password);
+                p.setCodiceFiscale(cf);
+                p.setIsAttivo(true);
+                result = rt.postForObject("http://localhost:8080/sign-up", p, HttpStatus.class);
+                break;
+            case "ROLE_MEDICO":
+                m = new Medico();
+                m.setAuthorities(role);
+                m.setPassword(password);
+                m.setCodiceFiscale(cf);
+                result = rt.postForObject("http://localhost:8080/sign-up", m, HttpStatus.class);
+                break;
+            case "ROLE_ADMIN":
+                a = new Amministratore();
+                a.setAuthorities(role);
+                a.setPassword(password);
+                a.setCodiceFiscale(cf);
+                result = rt.postForObject("http://localhost:8080/sign-up", a, HttpStatus.class);
+                break;
         }
 
+        log.info(result.toString());
         return "redirect:utenti";
     }
 

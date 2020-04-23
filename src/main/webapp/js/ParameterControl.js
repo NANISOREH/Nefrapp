@@ -384,7 +384,7 @@ var oggettoMsg = "Inserire un'intestazione valida.<br><br>L'intestazione deve es
 				var pass = $("#password").val();
 				$("#hashedpass").val(hashPassword(pass, pass + $("#codiceFiscale").val()));
 				var dummy = "a".repeat(pass.length);
-				// alert($("#hashedpass").val());
+				//alert($("#hashedpass").val());
 				$("#password").val(dummy);
 				$(document).submit();
 			}

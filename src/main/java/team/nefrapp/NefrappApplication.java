@@ -1,10 +1,13 @@
 package team.nefrapp;
 import java.util.Arrays;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.session.StandardManager;
 import org.apache.tomcat.util.http.LegacyCookieProcessor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.embedded.tomcat.TomcatContextCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

@@ -1,10 +1,6 @@
 package team.nefrapp.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -28,9 +24,8 @@ public class AccessoController {
     Logger log = Logger.getLogger("AccessoController");
 
     @GetMapping(value="/login")
-    public String serveLogin(HttpServletResponse res) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+    public String serveLogin(HttpSession session) {
+        if (session.getAttribute("accessDone")!=null && (Boolean) session.getAttribute("accessDone") == true) {
             return "dashboard";
         }
         else return "login";
@@ -38,7 +33,7 @@ public class AccessoController {
 
     @PostMapping("/login")
     public String doLogin(HttpServletRequest req, HttpServletResponse res, HttpSession session) {
-        Cookie auth, role;
+        Cookie auth;
         MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
         map.add("username", req.getParameter("username"));
         map.add("password", req.getParameter("password"));
@@ -50,7 +45,7 @@ public class AccessoController {
         if (token != null) {
             session.setAttribute("accessDone", true);
             session.setAttribute("isPaziente", true);
-            auth = new Cookie ("nefrapp_auth", "Bearer/" + token);
+            auth = new Cookie ("nefrapp_auth", token);
             res.addCookie(auth);
             return "dashboard";
         }
@@ -61,7 +56,6 @@ public class AccessoController {
     @RequestMapping(value="/logout", method = RequestMethod.POST)
     public RedirectView logout (HttpSession session, HttpServletResponse response, HttpServletRequest request) {
         session.invalidate();
-        log.info("logout controller method");
         return new RedirectView("/dashboard");
     }
 }
