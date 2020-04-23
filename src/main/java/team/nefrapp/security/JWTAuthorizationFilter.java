@@ -24,6 +24,7 @@ import java.util.ArrayList;
  */
 @Order(0)
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
+    final String TOKENKEY = "secret";    //TODO: gestire chiave
 
     public JWTAuthorizationFilter(AuthenticationManager authManager) {
         super(authManager);
@@ -77,12 +78,12 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
         if (token != null) {
             // parse the token.
-            String user = JWT.require(Algorithm.HMAC512("secret".getBytes()))
+            String user = JWT.require(Algorithm.HMAC512(TOKENKEY.getBytes()))
                     .build()
                     .verify(token.replace("Bearer ", ""))
                     .getSubject();
 
-            Claim role = JWT.require(Algorithm.HMAC512("secret".getBytes()))
+            Claim role = JWT.require(Algorithm.HMAC512(TOKENKEY.getBytes()))
                     .build()
                     .verify(token.replace("Bearer ", ""))
                     .getClaim("Authorities");

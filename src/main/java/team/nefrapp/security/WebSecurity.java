@@ -25,22 +25,27 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-                    http.cors().and().csrf().disable().authorizeRequests()
-                    .antMatchers(HttpMethod.POST, "/login", "/sign-up", "/auth", "/utenti").permitAll()
-                    .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/all", "/clean", "/utenti",
-                            "/js/*", "/includes/*", "/css/*", "/img/*", "/vendor/*", "/vendor/fontawesome-free/css/", "/nuget/*", "/scss/*",
-                            "/themes/fa", "/themes/fas").permitAll()
-                    .antMatchers(HttpMethod.PUT, "/sign-up").permitAll()
-                            .anyRequest().authenticated()
-                    .and()
-                    .addFilter(new JWTAuthorizationFilter(authenticationManager()))
-                    // this disables session creation on Spring Security
-                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-            ;
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.cors().and().csrf().disable().authorizeRequests()
+                //PERMESSI BACKEND
+                .antMatchers(HttpMethod.POST, "/sign-up", "/auth").permitAll()
+                //PERMESSI SITO
+                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/utenti",
+                        "/js/**", "/includes/**", "/css/**", "/img/**", "/vendor/**", "/nuget/**", "/scss/**",
+                        "/themes/**").permitAll()
+                //PERMESSI PAGINE DI SERVIZIO
+                .antMatchers(HttpMethod.POST, "/utenti").permitAll()
+                .antMatchers(HttpMethod.GET, "/clean").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .addFilter(new JWTAuthorizationFilter(authenticationManager()))
+                // this disables session creation on Spring Security
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        ;
 
-        }
+    }
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {

@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.ModelAndView;
@@ -12,13 +11,8 @@ import team.nefrapp.model.Amministratore;
 import team.nefrapp.model.Medico;
 import team.nefrapp.model.Paziente;
 import team.nefrapp.model.Utente;
-import team.nefrapp.repository.AmministratoreRepository;
-import team.nefrapp.repository.MedicoRepository;
-import team.nefrapp.repository.PazienteRepository;
 import team.nefrapp.repository.UtenteRepository;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 

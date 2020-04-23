@@ -82,7 +82,7 @@ public class RestUserController {
                 .withSubject(((User) auth.getPrincipal()).getUsername())
                 .withClaim("Authorities", auth.getAuthorities().toString())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 864000000))
-                .sign(HMAC512("secret".getBytes()));
+                .sign(HMAC512("secret".getBytes())); //TODO: gestione chiave
 
         return "Bearer/" + token;
     }
