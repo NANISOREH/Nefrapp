@@ -39,6 +39,7 @@ import team.nefrapp.rest.RestUserController;
 
 import javax.naming.AuthenticationException;
 import javax.servlet.http.Cookie;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @ExtendWith(SpringExtension.class)
@@ -84,8 +85,9 @@ public class RestUserControllerTest {
         LinkedMultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
         map.add("username", "MSNDNC90M32B461O");
         map.add("password", "662de9b86e5898d68821ae896d29cd765fd7d3b3020bc55057dcb8fd1e0ddb0da51f4e47d81a7c4c605da1286dc7b49d5d2e622525bd2819d72cc730dafa5e02");
-        token = restTemplate.postForObject("http://localhost:8080/auth", map, String.class);
-        assertThat(token).isNotNull();
+        Map<String, String> response = restTemplate.postForObject("http://localhost:8080/auth", map, Map.class);
+        assertThat(response.get("token")).isNotNull();
+        assertThat(response.get("role").equals("ROLE_PAZIENTE"));
     }
 
     @Test

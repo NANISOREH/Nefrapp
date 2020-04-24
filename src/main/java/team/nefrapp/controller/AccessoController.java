@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 
@@ -39,12 +40,23 @@ public class AccessoController {
         map.add("password", req.getParameter("password"));
 
         RestTemplate rt = new RestTemplate();
-        String token = rt.postForObject("http://localhost:8080/auth", map, String.class);
+        Map<String, String> response = rt.postForObject("http://localhost:8080/auth", map, Map.class);
 
-        //ruolo hardcodato come paziente temporaneamente
-        if (token != null) {
+        if (response != null) {
+            String token = response.get("token");
+            String role = response.get("role");
             session.setAttribute("accessDone", true);
-            session.setAttribute("isPaziente", true);
+            switch(role) {
+                case ("ROLE_PAZIENTE")  :
+                    session.setAttribute("isPaziente", true);
+                    break;
+                case ("ROLE_MEDICO")    :
+                    session.setAttribute("isMedico", true);
+                    break;
+                case ("ROLE_ADMIN") :
+                    session.setAttribute("isAmministratore", true);
+                    break;
+            }
             auth = new Cookie ("nefrapp_auth", token);
             res.addCookie(auth);
             return "dashboard";
