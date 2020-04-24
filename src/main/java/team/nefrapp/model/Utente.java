@@ -113,6 +113,13 @@ public class Utente {
                 "codiceFiscale='" + codiceFiscale + '\'' +
                 ", password='" + password + '\'' +
                 ", authorities='" + authorities + '\'' +
+                ", nome='" + nome + '\'' +
+                ", cognome='" + cognome + '\'' +
+                ", sesso='" + sesso + '\'' +
+                ", dataNascita=" + dataNascita +
+                ", luogoNascita='" + luogoNascita + '\'' +
+                ", codiceResidenza='" + codiceResidenza + '\'' +
+                ", codiceRecapito='" + codiceRecapito + '\'' +
                 '}';
     }
 }

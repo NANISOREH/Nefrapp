@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -118,9 +119,54 @@ public class RestUserController {
                     break;
                 default: break;
             }
-            return HttpStatus.OK;
+            return HttpStatus.CREATED;
         }
         return HttpStatus.BAD_REQUEST;
+    }
+
+    @RequestMapping(value = "/edit-med", method = RequestMethod.POST)
+    public @ResponseBody ResponseEntity<Medico> editMedico(@RequestBody Medico medico) {
+        Medico m = medRepo.findByCodiceFiscale(medico.getCodiceFiscale());
+        if (m == null)
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
+        //passare un utente con campo password vuoto viene interpretato come password non da modificare,
+        //quindi viene usato il valore della password prelevato dal database.
+        //il campo password non vuoto invece viene interpretato come password da modificare,
+        //e quindi viene usato il passwordencoder per hashare il nuovo valore e inserirlo nel Medico da salvare
+        String password = medico.getPassword();
+        if (password.equals("")){
+            medico.setPassword(m.getPassword());
+        } else if (password.length()>0) {
+            medico.setPassword(bCryptPasswordEncoder.encode(medico.getPassword()));
+        }
+
+        medRepo.save(medico);
+        medico.setPassword("");
+        return new ResponseEntity<>(medico, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/edit-paz", method = RequestMethod.POST)
+    public @ResponseBody
+    ResponseEntity<Paziente> editPaziente(@RequestBody Paziente paziente) {
+        Paziente p = pazRepo.findByCodiceFiscale(paziente.getCodiceFiscale());
+        if (p == null)
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
+        //passare un utente con campo password vuoto viene interpretato come password non da modificare,
+        //quindi viene usato il valore della password prelevato dal database.
+        //il campo password non vuoto invece viene interpretato come password da modificare,
+        //e quindi viene usato il passwordencoder per hashare il nuovo valore e inserirlo nel Paziente da salvare
+        String password = paziente.getPassword();
+        if (password.equals("")){
+            paziente.setPassword(p.getPassword());
+        } else if (password.length()>0) {
+            paziente.setPassword(bCryptPasswordEncoder.encode(paziente.getPassword()));
+        }
+
+        pazRepo.save(paziente);
+        paziente.setPassword("");
+        return new ResponseEntity<>(paziente, HttpStatus.OK);
     }
 
 }

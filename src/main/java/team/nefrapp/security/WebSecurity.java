@@ -30,6 +30,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable().authorizeRequests()
                 //PERMESSI BACKEND
                 .antMatchers(HttpMethod.POST, "/sign-up", "/auth").permitAll()
+                .antMatchers(HttpMethod.POST, "/edit-med").hasAnyRole("ROLE_MEDICO", "ROLE_ADMIN")
+                .antMatchers(HttpMethod.POST, "/edit-paz").hasAnyRole("ROLE_PAZIENTE", "ROLE_ADMIN")
                 //PERMESSI SITO
                 .antMatchers(HttpMethod.POST, "/login").permitAll()
                 .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/utenti",

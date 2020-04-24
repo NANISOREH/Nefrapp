@@ -8,4 +8,5 @@ import team.nefrapp.model.Medico;
 public interface MedicoRepository extends CrudRepository<Medico, Integer> {
     boolean existsByCodiceFiscale(String cf);
     Medico findByCodiceFiscale(String cf);
+
 }
