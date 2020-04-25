@@ -33,11 +33,11 @@ public class AccessoController {
     }
 
     @PostMapping("/login")
-    public String doLogin(HttpServletRequest req, HttpServletResponse res, HttpSession session) {
+    public String doLogin(@RequestParam String username, @RequestParam String password, HttpServletResponse res, HttpSession session) {
         Cookie auth;
         MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
-        map.add("username", req.getParameter("username"));
-        map.add("password", req.getParameter("password"));
+        map.add("username", username);
+        map.add("password", password);
 
         RestTemplate rt = new RestTemplate();
         Map<String, String> response = rt.postForObject("http://localhost:8080/auth", map, Map.class);

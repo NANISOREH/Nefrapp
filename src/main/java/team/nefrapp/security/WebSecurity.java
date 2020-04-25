@@ -29,18 +29,29 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
                 //PERMESSI BACKEND
-                .antMatchers(HttpMethod.POST, "/sign-up", "/auth").permitAll()
-                .antMatchers(HttpMethod.POST, "/edit-med").hasAnyRole("ROLE_MEDICO", "ROLE_ADMIN")
-                .antMatchers(HttpMethod.POST, "/edit-paz").hasAnyRole("ROLE_PAZIENTE", "ROLE_ADMIN")
+                .antMatchers(HttpMethod.POST, "/sign-paz", "/sign-med", "/sign-adm",
+                        "/auth", "/edit-med", "/edit-paz").permitAll()
+                .antMatchers(HttpMethod.GET, "/getuser").permitAll()
+
+//              I veri permessi del backend per ora sono commentati ma è opportuno aggiornarli comunque
+//                .antMatchers(HttpMethod.POST, "/edit-med").hasAnyRole("ROLE_MEDICO", "ROLE_ADMIN")
+//                .antMatchers(HttpMethod.POST, "/edit-paz").hasAnyRole("ROLE_PAZIENTE", "ROLE_ADMIN")
+//                .antMatchers(HttpMethod.GET, "/getuser").authenticated()
+
                 //PERMESSI SITO
                 .antMatchers(HttpMethod.POST, "/login").permitAll()
-                .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/utenti",
+                .antMatchers(HttpMethod.GET, "/login", "/team", "/dashboard", "/", "/error", "/utenti", "/provapaz", "/provamed",
                         "/js/**", "/includes/**", "/css/**", "/img/**", "/vendor/**", "/nuget/**", "/scss/**",
                         "/themes/**").permitAll()
+
                 //PERMESSI PAGINE DI SERVIZIO
                 .antMatchers(HttpMethod.POST, "/utenti").permitAll()
                 .antMatchers(HttpMethod.GET, "/clean").permitAll()
                 .anyRequest().authenticated()
+
+                
+                .and()
+                .exceptionHandling().accessDeniedPage("/login")
                 .and()
                 .addFilter(new JWTAuthorizationFilter(authenticationManager()))
                 // this disables session creation on Spring Security

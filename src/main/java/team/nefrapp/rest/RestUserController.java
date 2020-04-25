@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import team.nefrapp.model.Amministratore;
 import team.nefrapp.model.Medico;
 import team.nefrapp.model.Paziente;
@@ -23,17 +24,17 @@ import team.nefrapp.repository.PazienteRepository;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.security.sasl.AuthenticationException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import javax.xml.ws.Response;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 
+//TODO: exception handling per questo controller
+
 @RestController
 public class RestUserController {
-    Logger log = Logger.getLogger("RestLoginController");
+    Logger log = Logger.getLogger("RestUserController");
     @Autowired
     UtenteRepository repo;
     @Autowired
@@ -66,7 +67,9 @@ public class RestUserController {
         u.setCodiceFiscale(user);
         u = repo.findByCodiceFiscale(u.getCodiceFiscale());
 
-        if (u == null)  return null;
+        if (u == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nessun utente presente ha il CF indicato");
+        };
 
         SimpleGrantedAuthority s = new SimpleGrantedAuthority(u.getAuthorities());
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
@@ -79,7 +82,8 @@ public class RestUserController {
         try {
             auth = authenticationManager.authenticate(t);
         } catch (org.springframework.security.core.AuthenticationException e) {
-            return null;
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Password errata", e);
         }
 
         String token = JWT.create()
@@ -96,37 +100,54 @@ public class RestUserController {
         return response;
     }
 
-    @RequestMapping(value = "/sign-up", method = RequestMethod.POST)
-    public @ResponseBody HttpStatus signUp(@RequestBody Utente user) {
-        Paziente p = new Paziente();
-        Medico m = new Medico();
-        Amministratore a = new Amministratore();
+    @RequestMapping(value = "/sign-paz", method = RequestMethod.POST)
+    public @ResponseBody HttpStatus signUpPaziente(@RequestBody Paziente user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        Medico daAssociare = new Medico();
+        Iterator it;
 
-        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()))
-        {
-            switch (user.getAuthorities()) {
-                case "ROLE_PAZIENTE" :
-                    p.setAuthorities(user.getAuthorities());
-                    p.setPassword(user.getPassword());
-                    p.setCodiceFiscale(user.getCodiceFiscale());
-                    p.setIsAttivo(true);
-                    pazRepo.save(p);
-                    break;
-                case "ROLE_MEDICO" :
-                    m.setAuthorities(user.getAuthorities());
-                    m.setPassword(user.getPassword());
-                    m.setCodiceFiscale(user.getCodiceFiscale());
-                    medRepo.save(m);
-                    break;
-                case "ROLE_ADMIN" :
-                    a.setAuthorities(user.getAuthorities());
-                    a.setPassword(user.getPassword());
-                    a.setCodiceFiscale(user.getCodiceFiscale());
-                    admRepo.save(a);
-                    break;
-                default: break;
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_PAZIENTE")) {
+            user.setAttivo(true);
+            pazRepo.save(user);
+            if (!user.getCuranti().isEmpty()) {
+                it = user.getCuranti().iterator();
+                daAssociare = (Medico)it.next();
+                //TODO: aggiungi l'associazione anche per il medico
             }
+            return HttpStatus.CREATED;
+        }
+        else return HttpStatus.BAD_REQUEST;
+    }
+
+    @RequestMapping(value = "/sign-med", method = RequestMethod.POST)
+    public @ResponseBody HttpStatus signUpMedico(@RequestBody Medico user) {
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        Paziente daAssociare = new Paziente();
+        Iterator it;
+
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO"))
+        {
+            medRepo.save(user);
+            if (!user.getSeguiti().isEmpty()) {
+                it = user.getSeguiti().iterator();
+                daAssociare = (Paziente)it.next();
+                //TODO: aggiungi l'associazione anche per il paziente
+            }
+            return HttpStatus.CREATED;
+        }
+        return HttpStatus.BAD_REQUEST;
+    }
+
+    @RequestMapping(value = "/sign-adm", method = RequestMethod.POST)
+    public @ResponseBody HttpStatus signUpAmministratore(@RequestBody Amministratore user) {
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        log.info("sign-med");
+        log.info("password " + user.getPassword());
+
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO"))
+        {
+            log.info("faccio il set");
+            admRepo.save(user);
             return HttpStatus.CREATED;
         }
         return HttpStatus.BAD_REQUEST;
@@ -175,6 +196,17 @@ public class RestUserController {
         pazRepo.save(paziente);
         paziente.setPassword("");
         return new ResponseEntity<>(paziente, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/getuser", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<Utente> getUser(@RequestBody String cf) {
+        Utente fetched = repo.findByCodiceFiscale(cf);
+        if (fetched != null) {
+            fetched.setPassword("");
+            return new ResponseEntity<>(fetched, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(fetched, HttpStatus.BAD_REQUEST);
     }
 
 }

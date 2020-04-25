@@ -67,7 +67,7 @@ public class RestUserControllerTest {
         repo.deleteAll();
 
         p = new Paziente();
-        p.setIsAttivo(true);
+        p.setAttivo(true);
         p.setCodiceFiscale("MSNDNC90M32B461O");
         p.setPassword("662de9b86e5898d68821ae896d29cd765fd7d3b3020bc55057dcb8fd1e0ddb0da51f4e47d81a7c4c605da1286dc7b49d5d2e622525bd2819d72cc730dafa5e02");
         p.setAuthorities("ROLE_PAZIENTE");
@@ -93,7 +93,7 @@ public class RestUserControllerTest {
     @Test
     public void testEditPaz() throws Exception {
         p = new Paziente();
-        p.setIsAttivo(true);
+        p.setAttivo(true);
         p.setCodiceFiscale("MSNDNC90M32B461O");
         p.setNome("Nico");
         p.setPassword("");

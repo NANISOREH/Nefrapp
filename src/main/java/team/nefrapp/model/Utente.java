@@ -1,9 +1,14 @@
 package team.nefrapp.model;
 
+import com.fasterxml.jackson.annotation.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.lang.String;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.*;
 
