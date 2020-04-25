@@ -28,6 +28,8 @@ public class Utente {
     private String luogoNascita;
     private String codiceResidenza;
     private String codiceRecapito;
+    @Transient
+    private String token;
 
     public String getPassword() {
         return password;
@@ -107,6 +109,14 @@ public class Utente {
 
     public void setCodiceRecapito(String codiceRecapito) {
         this.codiceRecapito = codiceRecapito;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public Utente() {

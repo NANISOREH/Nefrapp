@@ -31,14 +31,17 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.WebApplicationContext;
+import team.nefrapp.model.Medico;
 import team.nefrapp.model.Paziente;
 import team.nefrapp.model.Utente;
+import team.nefrapp.repository.MedicoRepository;
 import team.nefrapp.repository.PazienteRepository;
 import team.nefrapp.repository.UtenteRepository;
 import team.nefrapp.rest.RestUserController;
 
 import javax.naming.AuthenticationException;
 import javax.servlet.http.Cookie;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -54,6 +57,8 @@ public class RestUserControllerTest {
     @Autowired
     private UtenteRepository repo;
     @Autowired
+    private MedicoRepository medRepo;
+    @Autowired
     private PazienteRepository pazRepo;
     @Autowired
     private TestRestTemplate restTemplate;
@@ -64,15 +69,16 @@ public class RestUserControllerTest {
 
     @Test
     public void testRegistrazione(){
-        repo.deleteAll();
-
         p = new Paziente();
         p.setAttivo(true);
         p.setCodiceFiscale("MSNDNC90M32B461O");
         p.setPassword("662de9b86e5898d68821ae896d29cd765fd7d3b3020bc55057dcb8fd1e0ddb0da51f4e47d81a7c4c605da1286dc7b49d5d2e622525bd2819d72cc730dafa5e02");
         p.setAuthorities("ROLE_PAZIENTE");
+        HashSet<Medico> curanti = new HashSet<>();
+        curanti.add(medRepo.findByCodiceFiscale("DCPLRD71M12C129X"));
+        p.setCuranti(curanti);
 
-        HttpStatus status = restTemplate.postForObject("http://localhost:8080/sign-up", p, HttpStatus.class);
+        HttpStatus status = restTemplate.postForObject("http://localhost:8080/sign-paz", p, HttpStatus.class);
 
         Utente retrieved = repo.findByCodiceFiscale(p.getCodiceFiscale());
         assert(retrieved.getCodiceFiscale().equals(p.getCodiceFiscale()));
@@ -110,6 +116,6 @@ public class RestUserControllerTest {
         assert(result.getStatusCode() == HttpStatus.OK);
         assert(result.getBody().toString().equals(p.toString()));
 
-        repo.deleteAll();
+        pazRepo.deleteByCodiceFiscale("MSNDNC90M32B461O");
     }
 }

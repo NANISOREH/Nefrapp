@@ -24,13 +24,15 @@ import team.nefrapp.repository.PazienteRepository;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.security.sasl.AuthenticationException;
+import javax.validation.Valid;
 import javax.xml.ws.Response;
 import java.util.*;
 import java.util.logging.Logger;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 
-//TODO: exception handling per questo controller
+//TODO: input sanitization dei metodi che prendono un pojo dalla request
+// (annotazione @Valid nella firma del metodo e annotazioni @Value, @Min ecc. sui campi dell' oggetto entity)
 
 @RestController
 public class RestUserController {
@@ -60,13 +62,19 @@ public class RestUserController {
      */
     @RequestMapping(value = "/auth", method = RequestMethod.POST)
     public @ResponseBody
-    Map<String, String> createAuthenticationToken(@RequestBody LinkedMultiValueMap<String, String> authData){
+    Utente createAuthenticationToken(@RequestBody LinkedMultiValueMap<String, String> authData){
         String user = authData.getFirst("username");
         Authentication auth;
         Utente u = new Utente();
         u.setCodiceFiscale(user);
         u = repo.findByCodiceFiscale(u.getCodiceFiscale());
 
+        //Sì, le eccezioni qua provocano esplosioni quando dai dati d'accesso non corretti
+        //ma l'unico modo vero di evitarlo è deployare (come si dovrebbe) backend rest e sito
+        //come due webapp completamente distinte. Se l'api lancia eccezione il sito dovrebbe soltanto
+        //raccogliere il suo bell'HttpStatus negativo e andare avanti con la sua vita.
+        //Non puoi nemmeno fare exception handling dell'api nei controller del sito, perché
+        //le due parti devono essere completamente disaccoppiate e comunicare solo attraverso request e response http
         if (u == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nessun utente presente ha il CF indicato");
         };
@@ -93,13 +101,16 @@ public class RestUserController {
                 .sign(HMAC512("secret".getBytes())); //TODO: gestione chiave
         token = "Bearer/"+token;
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        response.put("role", u.getAuthorities());
-        log.info(response.toString());
-        return response;
+        u.setToken(token);
+        u.setPassword("");
+        return u;
     }
 
+    /**
+     * Registra un paziente inserito nel body della request
+     * @param user
+     * @return HttpStatus (CREATED o BAD_REQUEST)
+     */
     @RequestMapping(value = "/sign-paz", method = RequestMethod.POST)
     public @ResponseBody HttpStatus signUpPaziente(@RequestBody Paziente user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -109,16 +120,16 @@ public class RestUserController {
         if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_PAZIENTE")) {
             user.setAttivo(true);
             pazRepo.save(user);
-            if (!user.getCuranti().isEmpty()) {
-                it = user.getCuranti().iterator();
-                daAssociare = (Medico)it.next();
-                //TODO: aggiungi l'associazione anche per il medico
-            }
             return HttpStatus.CREATED;
         }
         else return HttpStatus.BAD_REQUEST;
     }
 
+    /**
+     * Registra un medico inserito nel body della request
+     * @param user
+     * @return HttpStatus (CREATED o BAD_REQUEST)
+     */
     @RequestMapping(value = "/sign-med", method = RequestMethod.POST)
     public @ResponseBody HttpStatus signUpMedico(@RequestBody Medico user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -128,31 +139,33 @@ public class RestUserController {
         if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO"))
         {
             medRepo.save(user);
-            if (!user.getSeguiti().isEmpty()) {
-                it = user.getSeguiti().iterator();
-                daAssociare = (Paziente)it.next();
-                //TODO: aggiungi l'associazione anche per il paziente
-            }
             return HttpStatus.CREATED;
         }
         return HttpStatus.BAD_REQUEST;
     }
 
+    /**
+     * Registra un amministratore inserito nel body della request
+     * @param user
+     * @return HttpStatus (CREATED o BAD_REQUEST)
+     */
     @RequestMapping(value = "/sign-adm", method = RequestMethod.POST)
     public @ResponseBody HttpStatus signUpAmministratore(@RequestBody Amministratore user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        log.info("sign-med");
-        log.info("password " + user.getPassword());
 
         if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO"))
         {
-            log.info("faccio il set");
             admRepo.save(user);
             return HttpStatus.CREATED;
         }
         return HttpStatus.BAD_REQUEST;
     }
 
+    /**
+     * Modifica un medico con i dati inseriti nel body della request
+     * @param medico
+     * @return HttpStatus (OK o BAD_REQUEST)
+     */
     @RequestMapping(value = "/edit-med", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Medico> editMedico(@RequestBody Medico medico) {
         Medico m = medRepo.findByCodiceFiscale(medico.getCodiceFiscale());
@@ -175,6 +188,11 @@ public class RestUserController {
         return new ResponseEntity<>(medico, HttpStatus.OK);
     }
 
+    /**
+     * Modifica un paziente con i dati inseriti nel body della request
+     * @param paziente
+     * @return HttpStatus (OK o BAD_REQUEST)
+     */
     @RequestMapping(value = "/edit-paz", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Paziente> editPaziente(@RequestBody Paziente paziente) {
@@ -196,17 +214,6 @@ public class RestUserController {
         pazRepo.save(paziente);
         paziente.setPassword("");
         return new ResponseEntity<>(paziente, HttpStatus.OK);
-    }
-
-    @RequestMapping(value = "/getuser", method = RequestMethod.GET)
-    public @ResponseBody ResponseEntity<Utente> getUser(@RequestBody String cf) {
-        Utente fetched = repo.findByCodiceFiscale(cf);
-        if (fetched != null) {
-            fetched.setPassword("");
-            return new ResponseEntity<>(fetched, HttpStatus.OK);
-        }
-
-        return new ResponseEntity<>(fetched, HttpStatus.BAD_REQUEST);
     }
 
 }

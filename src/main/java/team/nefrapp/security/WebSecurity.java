@@ -31,7 +31,6 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 //PERMESSI BACKEND
                 .antMatchers(HttpMethod.POST, "/sign-paz", "/sign-med", "/sign-adm",
                         "/auth", "/edit-med", "/edit-paz").permitAll()
-                .antMatchers(HttpMethod.GET, "/getuser").permitAll()
 
 //              I veri permessi del backend per ora sono commentati ma è opportuno aggiornarli comunque
 //                .antMatchers(HttpMethod.POST, "/edit-med").hasAnyRole("ROLE_MEDICO", "ROLE_ADMIN")
@@ -49,7 +48,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/clean").permitAll()
                 .anyRequest().authenticated()
 
-                
+
                 .and()
                 .exceptionHandling().accessDeniedPage("/login")
                 .and()

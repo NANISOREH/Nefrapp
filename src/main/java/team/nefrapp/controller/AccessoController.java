@@ -1,12 +1,18 @@
 package team.nefrapp.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.view.RedirectView;
+import reactor.core.publisher.Mono;
+import team.nefrapp.model.Utente;
 import team.nefrapp.repository.UtenteRepository;
 
 import javax.servlet.http.Cookie;
@@ -14,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -40,11 +47,15 @@ public class AccessoController {
         map.add("password", password);
 
         RestTemplate rt = new RestTemplate();
-        Map<String, String> response = rt.postForObject("http://localhost:8080/auth", map, Map.class);
+        Utente utente = rt.postForObject("http://localhost:8080/auth", map, Utente.class);
 
-        if (response != null) {
-            String token = response.get("token");
-            String role = response.get("role");
+        if (utente != null) {
+            String token = utente.getToken();
+            String role = utente.getAuthorities();
+            if (utente != null){
+                utente.setToken("");
+                session.setAttribute("utente", utente);
+            }
             session.setAttribute("accessDone", true);
             switch(role) {
                 case ("ROLE_PAZIENTE")  :
