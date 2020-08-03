@@ -1,10 +1,12 @@
 package nefrapp.site.controller;
 
 import nefrapp.site.model.Utente;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -32,11 +34,16 @@ public class AccessoController {
     @PostMapping("/login")
     public String doLogin(@RequestParam String username, @RequestParam String password, HttpServletResponse res, HttpSession session) {
         Cookie auth;
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
-        map.add("username", username);
-        map.add("password", password);
+        Utente utente = new Utente();
+        utente.setCodiceFiscale(username);
+        utente.setPassword(password);
 
-        Utente utente = rt.postForObject("http://localhost:8080/auth", map, Utente.class);
+        try {
+            utente = rt.postForObject("http://localhost:8080/auth", utente, Utente.class);
+        } catch (HttpClientErrorException e) {
+            log.info(e.getMessage());
+            utente = null;
+        }
 
         if (utente != null) {
             String token = utente.getToken();
@@ -66,7 +73,9 @@ public class AccessoController {
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public RedirectView logout(HttpSession session, HttpServletResponse response, HttpServletRequest request) {
+    public RedirectView logout(HttpSession session) {
+        Utente u = (Utente)session.getAttribute("utente");
+        rt.postForObject("http://localhost:8080/deauth", u.getCodiceFiscale(), HttpStatus.class);
         session.invalidate();
         return new RedirectView("/dashboard");
     }

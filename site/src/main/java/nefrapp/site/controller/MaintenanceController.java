@@ -6,9 +6,7 @@ import nefrapp.site.model.Paziente;
 import nefrapp.site.model.Utente;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -19,28 +17,37 @@ import java.util.logging.Logger;
 public class MaintenanceController {
     Logger log = Logger.getLogger("MaintenanceController");
 
-    //serve la pagina utenti.jsp, da localhost:8080/utenti
     @GetMapping(path = "/utenti")
-    public ModelAndView addUser(ModelAndView model) {
+    public ModelAndView showUsers(ModelAndView model) {
         RestTemplate rt = new RestTemplate();
         HttpStatus result = null;
         Utente[] list = rt.getForObject("http://localhost:8080/getuser/all", Utente[].class);
         ArrayList<Utente> utenti = new ArrayList<Utente>();
-        for (Utente u : list) utenti.add(u);
+        for (Utente u : list)
+        {
+            if (u != null)
+            utenti.add(u);
+        }
 
         model.addObject("utenti", utenti);
         model.setViewName("utenti");
         return model;
     }
-/*
-    @GetMapping(path="/clean")
-    public String cleanTable(){
-        log.info("ci entri");
-        repo.deleteAll();
-        return "redirect:utenti";
-    }*/
 
-    //aggiunge un utente i cui dati sono stati inseriti da localhost:8080/utenti
+    @RequestMapping(value="/clean", method = RequestMethod.GET)
+    public String cleanTable(){
+        RestTemplate rt = new RestTemplate();
+        rt.delete("http://localhost:8080/deleteuser/all");
+        return "redirect:utenti";
+    }
+
+    @RequestMapping(value="/deleteUser", method = RequestMethod.DELETE)
+    public String deleteUser(@RequestParam(value = "cf") String cf){
+        RestTemplate rt = new RestTemplate();
+        rt.delete("http://localhost:8080/deleteuser/" + cf);
+        return "redirect:utenti";
+    }
+
     @PostMapping(path = "/utenti")
     public String addUser(@RequestParam(value = "codiceFiscale") String cf,
                           @RequestParam(value = "password") String password,

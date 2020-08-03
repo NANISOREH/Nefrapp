@@ -14,6 +14,7 @@ public class Utente {
     private String codiceResidenza;
     private String codiceRecapito;
     private String token;
+    private Boolean autenticato;
 
     public String getPassword() {
         return password;
@@ -101,6 +102,14 @@ public class Utente {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setAutenticato(Boolean value) {
+        this.autenticato = value;
+    }
+
+    public Boolean getAutenticato() {
+        return this.autenticato;
     }
 
     public Utente() {

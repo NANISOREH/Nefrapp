@@ -19,7 +19,7 @@ public class Utente {
     private String luogoNascita;
     private String codiceResidenza;
     private String codiceRecapito;
-    @Transient
+    private Boolean autenticato;
     private String token;
 
     public String getPassword() {
@@ -127,6 +127,14 @@ public class Utente {
                 ", codiceResidenza='" + codiceResidenza + '\'' +
                 ", codiceRecapito='" + codiceRecapito + '\'' +
                 '}';
+    }
+
+    public Boolean getAutenticato() {
+        return autenticato;
+    }
+
+    public void setAutenticato(Boolean autenticato) {
+        this.autenticato = autenticato;
     }
 }
 

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.security.sasl.AuthenticationException;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -63,31 +64,25 @@ public class RestUserController {
      */
     @RequestMapping(value = "/auth", method = RequestMethod.POST)
     public @ResponseBody
-    Utente createAuthenticationToken(@RequestBody LinkedMultiValueMap<String, String> authData) {
-        String user = authData.getFirst("username");
+    Utente createAuthenticationToken(@RequestBody Utente authData) {
+        log.info(authData.toString());
+        String user = authData.getCodiceFiscale();
         Authentication auth;
         Utente u = new Utente();
-        u.setCodiceFiscale(user);
-        u = repo.findByCodiceFiscale(u.getCodiceFiscale());
+        u = repo.findByCodiceFiscale(authData.getCodiceFiscale());
 
-        //Sì, le eccezioni qua provocano esplosioni quando dai dati d'accesso non corretti
-        //ma l'unico modo vero di evitarlo è deployare (come si dovrebbe) backend rest e sito
-        //come due webapp completamente distinte. Se l'api lancia eccezione il sito dovrebbe soltanto
-        //raccogliere il suo bell'HttpStatus negativo e andare avanti con la sua vita.
-        //Non puoi nemmeno fare exception handling dell'api nei controller del sito, perché
-        //le due parti devono essere completamente disaccoppiate e comunicare solo attraverso request e response http
         if (u == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nessun utente presente ha il CF indicato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun utente con questo CF");
         }
-        ;
+
 
         SimpleGrantedAuthority s = new SimpleGrantedAuthority(u.getAuthorities());
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(s);
 
         UsernamePasswordAuthenticationToken t = new UsernamePasswordAuthenticationToken(
-                authData.getFirst("username"),
-                authData.getFirst("password"),
+                authData.getCodiceFiscale(),
+                authData.getPassword(),
                 authorities);
         try {
             auth = authenticationManager.authenticate(t);
@@ -96,16 +91,39 @@ public class RestUserController {
                     HttpStatus.BAD_REQUEST, "Password errata", e);
         }
 
+        if (u.getAutenticato() != null && u.getAutenticato() == true) {
+            return u;
+        }
+
         String token = JWT.create()
                 .withSubject(((User) auth.getPrincipal()).getUsername())
                 .withClaim("Authorities", auth.getAuthorities().toString())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 864000000))
                 .sign(HMAC512("secret".getBytes())); //TODO: gestione chiave
         token = "Bearer/" + token;
-
+        u.setAutenticato(true);
         u.setToken(token);
+        repo.save(u);
         u.setPassword("");
         return u;
+    }
+
+    @RequestMapping(value = "/deauth", method = RequestMethod.POST)
+    public @ResponseBody
+    HttpStatus deauthUtente (@RequestBody String cf) {
+        Utente u = new Utente();
+        u = repo.findByCodiceFiscale(cf);
+        if (u == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun utente con questo CF");
+        }
+        if (u.getAutenticato() == false) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Utente non autenticato");
+        }
+
+        u.setAutenticato(false);
+        u.setToken(null);
+        repo.save(u);
+        return HttpStatus.OK;
     }
 
     /**
@@ -225,14 +243,14 @@ public class RestUserController {
     }
 
     @GetMapping("/getuser/{cf}")
-    Utente getPerson(@PathVariable("cf") String cf) {
+    Utente getuser(@PathVariable("cf") String cf) {
         Utente u = repo.findByCodiceFiscale(cf);
         u.setPassword("");
         return u;
     }
 
     @GetMapping("/getuser/all")
-    Utente[] getAll() {
+    Utente[] getAllUsers() {
         Utente[] users = new Utente[50];
         int i = 0;
         Iterable<Utente> list = repo.findAll();
@@ -244,4 +262,16 @@ public class RestUserController {
         return users;
     }
 
+    @DeleteMapping(value="/deleteuser/{cf}")
+    HttpStatus deleteUser(@PathVariable("cf") String cf) {
+        Utente u = repo.findByCodiceFiscale(cf);
+        if (u == null) return HttpStatus.NOT_FOUND;
+        repo.deleteByCodiceFiscale(cf);
+        return HttpStatus.OK;
+    }
+
+    @DeleteMapping(value="/deleteuser/all")
+    void deleteAllUsers() {
+        repo.deleteAll();
+    }
 }

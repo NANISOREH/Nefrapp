@@ -37,6 +37,10 @@
     ${item.codiceFiscale}
     ${item.password}
     ${item.authorities}
+    <button class="btn btn-primary btn-user btn-block mt-3"
+            value="${item.codiceFiscale}" id="cancUtenteBtn"
+            onclick="deleteUser(this)">Rimuovi
+    </button>
     <br><br>
 </c:forEach>
 
