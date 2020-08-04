@@ -21,9 +21,9 @@
     </div>
     <div class="form-group">
         <select title="Ruolo" name="role">
-            <option value="ROLE_MEDICO">Medico</option>
-            <option value="ROLE_PAZIENTE">Paziente</option>
-            <option value="ROLE_ADMIN">Amministratore</option>
+            <option value="MEDICO">Medico</option>
+            <option value="PAZIENTE">Paziente</option>
+            <option value="ADMIN">Amministratore</option>
         </select>
     </div>
 

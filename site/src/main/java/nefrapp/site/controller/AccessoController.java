@@ -1,7 +1,7 @@
 package nefrapp.site.controller;
 
 import nefrapp.site.model.Utente;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -54,13 +54,13 @@ public class AccessoController {
             }
             session.setAttribute("accessDone", true);
             switch (role) {
-                case ("ROLE_PAZIENTE"):
+                case ("PAZIENTE"):
                     session.setAttribute("isPaziente", true);
                     break;
-                case ("ROLE_MEDICO"):
+                case ("MEDICO"):
                     session.setAttribute("isMedico", true);
                     break;
-                case ("ROLE_ADMIN"):
+                case ("ADMIN"):
                     session.setAttribute("isAmministratore", true);
                     break;
             }
@@ -73,10 +73,50 @@ public class AccessoController {
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public RedirectView logout(HttpSession session) {
+    public RedirectView logout(HttpSession session, HttpServletRequest req, HttpServletResponse response) {
         Utente u = (Utente)session.getAttribute("utente");
-        rt.postForObject("http://localhost:8080/deauth", u.getCodiceFiscale(), HttpStatus.class);
+        HttpEntity request = makeRequest(req, u.getCodiceFiscale());
+
+        RestTemplate rt = new RestTemplate();
+        rt.exchange("http://localhost:8080/deauth", HttpMethod.POST, request, HttpStatus.class);
+
         session.invalidate();
+        response.setContentType("text/html");
+        Cookie cookie = new Cookie("nefrapp_auth", "");
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setComment("EXPIRING COOKIE at " + System.currentTimeMillis());
+        response.addCookie(cookie);
+
         return new RedirectView("/dashboard");
+    }
+
+    private HttpEntity makeRequest(HttpServletRequest req, String cf) {
+        Cookie[] cookies = req.getCookies();
+        String header = new String();
+
+        if (cookies == null || cookies.length == 1) {
+            log.info("header nullo");
+            return null;
+        }
+
+        for (Cookie c : cookies) {
+            if (c.getName().equals("nefrapp_auth")) {
+                header = c.getValue().replace("/", " ");
+            }
+        }
+
+        if (header == null || !header.startsWith("") || header.endsWith("Bearer ")) {
+            log.info("header vuoto");
+            return null;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token", header);
+
+        MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+        map.add("cf", cf);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        return request;
     }
 }

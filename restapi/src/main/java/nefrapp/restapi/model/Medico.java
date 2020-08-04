@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@DiscriminatorValue("ROLE_MEDICO")
+@DiscriminatorValue("MEDICO")
 public class Medico extends Utente {
     public Medico() {
         super();

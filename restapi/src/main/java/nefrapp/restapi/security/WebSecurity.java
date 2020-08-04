@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class WebSecurity extends WebSecurityConfigurerAdapter {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private UserDetailsServiceImpl userDetailsService;
@@ -28,20 +30,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/sign-paz", "/sign-med", "/sign-adm",
-                        "/auth", "/deauth", "/edit-med", "/edit-paz", "/error").permitAll()
-                .antMatchers(HttpMethod.GET, "/getuser/**").permitAll()
-                .antMatchers(HttpMethod.DELETE, "/deleteuser/**").permitAll()
-
-//              I veri permessi del backend per ora sono commentati ma è opportuno aggiornarli comunque
-//                .antMatchers(HttpMethod.POST, "/edit-med").hasAnyRole("ROLE_MEDICO", "ROLE_ADMIN")
-//                .antMatchers(HttpMethod.POST, "/edit-paz").hasAnyRole("ROLE_PAZIENTE", "ROLE_ADMIN")
-//                .antMatchers(HttpMethod.GET, "/getuser").authenticated()
-                .anyRequest().authenticated()
-
-
-                .and()
-                .exceptionHandling().accessDeniedPage("/login")
+                .anyRequest().permitAll()
                 .and()
                 .addFilter(new JWTAuthorizationFilter(authenticationManager()))
                 // this disables session creation on Spring Security
@@ -58,8 +47,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://localhost:8080/"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST"));
+        configuration.setAllowedOrigins(Arrays.asList("https://localhost:8080/", "https://localhost:8081/"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

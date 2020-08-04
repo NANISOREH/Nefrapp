@@ -6,17 +6,16 @@ import nefrapp.restapi.model.Amministratore;
 import nefrapp.restapi.model.Medico;
 import nefrapp.restapi.model.Paziente;
 import nefrapp.restapi.model.Utente;
-import nefrapp.restapi.repository.AmministratoreRepository;
-import nefrapp.restapi.repository.MedicoRepository;
-import nefrapp.restapi.repository.PazienteRepository;
-import nefrapp.restapi.repository.UtenteRepository;
+import nefrapp.restapi.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.security.sasl.AuthenticationException;
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -41,6 +39,8 @@ public class RestUserController {
     @Autowired
     UtenteRepository repo;
     @Autowired
+    UtenteRepositoryCustom repoCustom;
+    @Autowired
     PazienteRepository pazRepo;
     @Autowired
     AmministratoreRepository admRepo;
@@ -49,6 +49,7 @@ public class RestUserController {
     @Autowired
     private AuthenticationManager authenticationManager;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private Authentication authenticatedUser = SecurityContextHolder.getContext().getAuthentication();
 
     public RestUserController(BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -65,21 +66,26 @@ public class RestUserController {
     @RequestMapping(value = "/auth", method = RequestMethod.POST)
     public @ResponseBody
     Utente createAuthenticationToken(@RequestBody Utente authData) {
-        log.info(authData.toString());
-        String user = authData.getCodiceFiscale();
         Authentication auth;
-        Utente u = new Utente();
-        u = repo.findByCodiceFiscale(authData.getCodiceFiscale());
+        Utente u = repo.findByCodiceFiscale(authData.getCodiceFiscale());
 
+        //controlla se l'utente e' inesistente o gia' autenticato
         if (u == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun utente con questo CF");
         }
+        if (u.getAutenticato() != null && u.getAutenticato() == true) {
+            return u;
+        }
 
-
+        //crea una lista di granted authorities con i permessi dell'utente (prelevati dal database)
         SimpleGrantedAuthority s = new SimpleGrantedAuthority(u.getAuthorities());
         ArrayList<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(s);
 
+        //crea un token coi dati dell'utente che l'authenticationManager autentichera',
+        //usando l'implementazione concreta di UsersDetailsService presente nel package security:
+        //essa contiene le informazione necessarie a Spring Security per ottenere i dati necessari
+        //per autenticare l'utente
         UsernamePasswordAuthenticationToken t = new UsernamePasswordAuthenticationToken(
                 authData.getCodiceFiscale(),
                 authData.getPassword(),
@@ -91,14 +97,12 @@ public class RestUserController {
                     HttpStatus.BAD_REQUEST, "Password errata", e);
         }
 
-        if (u.getAutenticato() != null && u.getAutenticato() == true) {
-            return u;
-        }
-
+        //crea il token JWT, lo firma e aggiorna lo stato dell'utente nel database:
+        //cancella la password dal DTO prima di restituirlo al client
         String token = JWT.create()
                 .withSubject(((User) auth.getPrincipal()).getUsername())
                 .withClaim("Authorities", auth.getAuthorities().toString())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 864000000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + 600000000))
                 .sign(HMAC512("secret".getBytes())); //TODO: gestione chiave
         token = "Bearer/" + token;
         u.setAutenticato(true);
@@ -108,11 +112,19 @@ public class RestUserController {
         return u;
     }
 
+    /**
+     * Deautentica un utente loggato, aggiorna il suo stato e rimuove il suo token d'accesso dal database.
+     *
+     * @param data, Map nome-valore coi dati necessari alla richiesta (per ora contiene solo il codice fiscale dell'utente
+     * da deautenticare)
+     * @return HttpStatus (CREATED o BAD_REQUEST)
+     */
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/deauth", method = RequestMethod.POST)
     public @ResponseBody
-    HttpStatus deauthUtente (@RequestBody String cf) {
-        Utente u = new Utente();
-        u = repo.findByCodiceFiscale(cf);
+    HttpStatus deauthUtente (@RequestBody LinkedMultiValueMap<String, String> data) {
+        String cf = data.getFirst("cf");
+        Utente u = repo.findByCodiceFiscale(cf);
         if (u == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun utente con questo CF");
         }
@@ -129,9 +141,10 @@ public class RestUserController {
     /**
      * Registra un paziente inserito nel body della request
      *
-     * @param user
+     * @param user, DTO coi dati del paziente da registrare
      * @return HttpStatus (CREATED o BAD_REQUEST)
      */
+    @PreAuthorize("hasAnyAuthority('[ADMIN]', '[MEDICO]')")
     @RequestMapping(value = "/sign-paz", method = RequestMethod.POST)
     public @ResponseBody
     HttpStatus signUpPaziente(@RequestBody Paziente user) {
@@ -139,7 +152,7 @@ public class RestUserController {
         Medico daAssociare = new Medico();
         Iterator it;
 
-        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_PAZIENTE")) {
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("PAZIENTE")) {
             user.setAttivo(true);
             pazRepo.save(user);
             return HttpStatus.CREATED;
@@ -149,9 +162,10 @@ public class RestUserController {
     /**
      * Registra un medico inserito nel body della request
      *
-     * @param user
+     * @param user, DTO coi dati del medico da registrare
      * @return HttpStatus (CREATED o BAD_REQUEST)
      */
+    @PreAuthorize("hasAuthority('[ADMIN]')")
     @RequestMapping(value = "/sign-med", method = RequestMethod.POST)
     public @ResponseBody
     HttpStatus signUpMedico(@RequestBody Medico user) {
@@ -159,7 +173,7 @@ public class RestUserController {
         Paziente daAssociare = new Paziente();
         Iterator it;
 
-        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO")) {
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("MEDICO")) {
             medRepo.save(user);
             return HttpStatus.CREATED;
         }
@@ -172,12 +186,13 @@ public class RestUserController {
      * @param user
      * @return HttpStatus (CREATED o BAD_REQUEST)
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @RequestMapping(value = "/sign-adm", method = RequestMethod.POST)
     public @ResponseBody
     HttpStatus signUpAmministratore(@RequestBody Amministratore user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
-        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ROLE_MEDICO")) {
+        if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("ADMIN")) {
             admRepo.save(user);
             return HttpStatus.CREATED;
         }
@@ -191,11 +206,19 @@ public class RestUserController {
      * @return HttpStatus (OK o BAD_REQUEST)
      */
     @RequestMapping(value = "/edit-med", method = RequestMethod.POST)
+    @PreAuthorize("hasAnyAuthority('[ADMIN]', '[MEDICO]')")
     public @ResponseBody
     ResponseEntity<Medico> editMedico(@RequestBody Medico medico) {
         Medico m = medRepo.findByCodiceFiscale(medico.getCodiceFiscale());
         if (m == null)
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
+        //nel caso in cui l'utente autenticato non sia un amministratore, puo' modificare solo il suo stesso account
+        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")) {
+            if (!authenticatedUser.getPrincipal().equals(medico.getCodiceFiscale())) {
+                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+        }
 
         //passare un utente con campo password vuoto viene interpretato come password non da modificare,
         //quindi viene usato il valore della password prelevato dal database.
@@ -219,12 +242,20 @@ public class RestUserController {
      * @param paziente
      * @return HttpStatus (OK o BAD_REQUEST)
      */
+    @PreAuthorize("hasAnyAuthority('[ADMIN]', '[PAZIENTE]')")
     @RequestMapping(value = "/edit-paz", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity<Paziente> editPaziente(@RequestBody Paziente paziente) {
         Paziente p = pazRepo.findByCodiceFiscale(paziente.getCodiceFiscale());
         if (p == null)
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
+        //nel caso in cui l'utente autenticato non sia un amministratore, puo' modificare solo il suo stesso account
+        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")) {
+            if (!authenticatedUser.getPrincipal().equals(p.getCodiceFiscale())) {
+                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+        }
 
         //passare un utente con campo password vuoto viene interpretato come password non da modificare,
         //quindi viene usato il valore della password prelevato dal database.
@@ -242,36 +273,66 @@ public class RestUserController {
         return new ResponseEntity<>(paziente, HttpStatus.OK);
     }
 
+    /**
+     * Ottiene un Utente
+     *
+     * @param cf, codice fiscale dell'utente da cercare, ottenuto come pathvariable
+     * @return HttpStatus (CREATED o BAD_REQUEST)
+     */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/getuser/{cf}")
-    Utente getuser(@PathVariable("cf") String cf) {
+    public Utente getuser(@PathVariable("cf") String cf) {
         Utente u = repo.findByCodiceFiscale(cf);
         u.setPassword("");
         return u;
     }
 
+    /**
+     * Ottiene tutti gli utenti registrati
+     *
+     * @return Utente[]
+     */
+    @PreAuthorize("hasAuthority('[ADMIN]')")
     @GetMapping("/getuser/all")
-    Utente[] getAllUsers() {
-        Utente[] users = new Utente[50];
+    public @ResponseBody Utente[] getAllUsers() {
+        ArrayList<Utente> users = new ArrayList<>();
         int i = 0;
-        Iterable<Utente> list = repo.findAll();
-        for (Utente u : list) {
-            users[i] = u;
-            i++;
-        }
+        users = (ArrayList<Utente>) repo.findAll();
 
-        return users;
+        return users.toArray(new Utente[users.size()]);
     }
 
+    /**
+     * Elimina un Utente
+     *
+     * @param cf, codice fiscale dell'utente da eliminare, ottenuto come pathvariable
+     * @return HttpStatus (OK o NOT_FOUND)
+     */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping(value="/deleteuser/{cf}")
     HttpStatus deleteUser(@PathVariable("cf") String cf) {
         Utente u = repo.findByCodiceFiscale(cf);
         if (u == null) return HttpStatus.NOT_FOUND;
+
+        //nel caso in cui l'utente autenticato non sia un amministratore, puo' cancellare solo il suo stesso account
+        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")){
+            if (!authenticatedUser.getPrincipal().equals(cf)) {
+                return HttpStatus.BAD_REQUEST;
+            }
+        }
+
         repo.deleteByCodiceFiscale(cf);
         return HttpStatus.OK;
     }
 
+    /**
+     * Elimina tutti gli utenti registrati
+     *
+     * @return void
+     */
+    @PreAuthorize("hasAuthority('[ADMIN]')")
     @DeleteMapping(value="/deleteuser/all")
     void deleteAllUsers() {
-        repo.deleteAll();
+        repoCustom.deleteAllExceptAdmin();
     }
 }

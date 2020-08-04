@@ -1,7 +1,7 @@
 package nefrapp.site.controller;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+/*import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;*/
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -23,7 +23,7 @@ public class PageController {
         return "team";
     }
 
-    @GetMapping(value = "/profilo")
+/*    @GetMapping(value = "/profilo")
     public String profilo() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         log.info(auth.toString());
@@ -35,7 +35,7 @@ public class PageController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         log.info(auth.toString());
         return "authprova";
-    }
+    }*/
 
     @GetMapping({"/error", "/error.jsp"})
     public String error() {

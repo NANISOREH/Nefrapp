@@ -3,12 +3,20 @@ package nefrapp.restapi.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
+import nefrapp.restapi.controller.RestUserController;
+import nefrapp.restapi.model.Utente;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -17,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Filtro di autorizzazione inserito nella filter chain di Spring Security.
@@ -25,6 +34,7 @@ import java.util.ArrayList;
 @Order(0)
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     final String TOKENKEY = "secret";    //TODO: gestire chiave
+    Logger log = Logger.getLogger("AuthorizationFilter");
 
     public JWTAuthorizationFilter(AuthenticationManager authManager) {
         super(authManager);
@@ -43,27 +53,16 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
 
-        String header = null;
-        Cookie[] cookies = req.getCookies();
-        if (cookies == null || cookies.length == 1) {
-            chain.doFilter(req, res);
-            return;
+        String header = req.getHeader("token");
+        UsernamePasswordAuthenticationToken authentication = null;
+    
+        if (header != null) {
+            authentication = getAuthentication(header);
+        }
+        if (authentication != null) {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        for (Cookie c : cookies) {
-            if (c.getName().equals("nefrapp_auth")) {
-                header = c.getValue().replace("/", " ");
-            }
-        }
-
-        if (header == null || !header.startsWith("") || header.endsWith("Bearer ")) {
-            chain.doFilter(req, res);
-            return;
-        }
-
-        UsernamePasswordAuthenticationToken authentication = getAuthentication(header);
-        logger.info(authentication.toString());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
         return;
     }
@@ -90,8 +89,6 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                     .verify(token.replace("Bearer ", ""))
                     .getClaim("Authorities");
 
-            logger.info(role.toString());
-            logger.info(role.asString());
             authorities.add(new SimpleGrantedAuthority(role.asString()));
 
             if (user != null) {

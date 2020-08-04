@@ -108,6 +108,10 @@
                                     href="./resetPasswordAmministratoreView.jsp"> <i
                     class="fas fa-fw fa-tachometer-alt"></i> <span>Modifica
 						Password</span></a></li>
+            <li class="nav-item"><a class="nav-link"
+                                    href="/utenti"> <i
+                    class="fas fa-fw fa-tachometer-alt"></i> <span>Debug
+						Utenti</span></a></li>
         </c:when>
         <c:otherwise>
             <li class="nav-item"><a class="nav-link" href="login"> <i

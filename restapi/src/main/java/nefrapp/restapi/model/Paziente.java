@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@DiscriminatorValue("ROLE_PAZIENTE")
+@DiscriminatorValue("PAZIENTE")
 public class Paziente extends Utente {
 
     private Boolean isAttivo;
