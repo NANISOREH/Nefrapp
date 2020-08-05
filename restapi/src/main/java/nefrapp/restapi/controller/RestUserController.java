@@ -21,18 +21,34 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 import javax.security.sasl.AuthenticationException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.logging.Logger;
-
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 
 //TODO: input sanitization dei metodi che prendono un pojo dalla request
 // (annotazione @Valid nella firma del metodo e annotazioni @Value, @Min ecc. sui campi dell' oggetto entity)
 
+/**
+ * Rest controller che si occupa di gestire le operazioni relative agli utenti.
+ *
+ * Interfaccia (HttpMethod "/mapping" RequestBody -> ResponseBody):
+ *
+ * POST "/auth" Utente -> Utente
+ * POST "/deauth" LinkedMultiValueMap<String,String> -> HttpStatus
+ * POST "/sign-paz" Paziente -> HttpStatus
+ * POST "/sign-med" Medico -> HttpStatus
+ * POST "/sign-adm" Amministratore -> HttpStatus
+ * POST "/edit-med" Medico -> HttpStatus
+ * POST "/edit-paz" Paziente -> HttpStatus
+ * GET "/getuser/{cf}" -> Utente
+ * GET "/getuser/all" -> Utente[]
+ * DELETE "/deleteuser/{cf}" -> HttpStatus
+ * DELETE "/deleteuser/all" -> HttpStatus
+ *
+ */
 @RestController
 public class RestUserController {
     Logger log = Logger.getLogger("RestUserController");
@@ -49,7 +65,6 @@ public class RestUserController {
     @Autowired
     private AuthenticationManager authenticationManager;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private Authentication authenticatedUser = SecurityContextHolder.getContext().getAuthentication();
 
     public RestUserController(BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -58,7 +73,7 @@ public class RestUserController {
     /**
      * Ottiene un token di autenticazione JWT se le credenziali in input sono corrette
      *
-     * @param authData Map di stringhe contenente i dati di autenticazione
+     * @param authData DTO Utente contenente i dati di autenticazione
      * @return
      * @throws AuthenticationException
      * @throws JsonProcessingException
@@ -149,8 +164,6 @@ public class RestUserController {
     public @ResponseBody
     HttpStatus signUpPaziente(@RequestBody Paziente user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        Medico daAssociare = new Medico();
-        Iterator it;
 
         if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("PAZIENTE")) {
             user.setAttivo(true);
@@ -170,8 +183,6 @@ public class RestUserController {
     public @ResponseBody
     HttpStatus signUpMedico(@RequestBody Medico user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        Paziente daAssociare = new Paziente();
-        Iterator it;
 
         if (!repo.existsByCodiceFiscale(user.getCodiceFiscale()) && user.getAuthorities().equals("MEDICO")) {
             medRepo.save(user);
@@ -208,17 +219,12 @@ public class RestUserController {
     @RequestMapping(value = "/edit-med", method = RequestMethod.POST)
     @PreAuthorize("hasAnyAuthority('[ADMIN]', '[MEDICO]')")
     public @ResponseBody
-    ResponseEntity<Medico> editMedico(@RequestBody Medico medico) {
+    HttpStatus editMedico(@RequestBody Medico medico) {
         Medico m = medRepo.findByCodiceFiscale(medico.getCodiceFiscale());
         if (m == null)
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return HttpStatus.BAD_REQUEST;
 
-        //nel caso in cui l'utente autenticato non sia un amministratore, puo' modificare solo il suo stesso account
-        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")) {
-            if (!authenticatedUser.getPrincipal().equals(medico.getCodiceFiscale())) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-        }
+        //TODO: usare il request header "requestedBy" per limitare le modifiche possibili ai medici al loro stesso account
 
         //passare un utente con campo password vuoto viene interpretato come password non da modificare,
         //quindi viene usato il valore della password prelevato dal database.
@@ -233,7 +239,7 @@ public class RestUserController {
 
         medRepo.save(medico);
         medico.setPassword("");
-        return new ResponseEntity<>(medico, HttpStatus.OK);
+        return HttpStatus.OK;
     }
 
     /**
@@ -245,17 +251,15 @@ public class RestUserController {
     @PreAuthorize("hasAnyAuthority('[ADMIN]', '[PAZIENTE]')")
     @RequestMapping(value = "/edit-paz", method = RequestMethod.POST)
     public @ResponseBody
-    ResponseEntity<Paziente> editPaziente(@RequestBody Paziente paziente) {
+    HttpStatus editPaziente(@RequestBody Paziente paziente) {
         Paziente p = pazRepo.findByCodiceFiscale(paziente.getCodiceFiscale());
-        if (p == null)
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 
-        //nel caso in cui l'utente autenticato non sia un amministratore, puo' modificare solo il suo stesso account
-        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")) {
-            if (!authenticatedUser.getPrincipal().equals(p.getCodiceFiscale())) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
+        if (p == null) {
+            log.info("Paziente non trovato dal repository");
+            return HttpStatus.BAD_REQUEST;
         }
+
+        //TODO: usare il request header "requestedBy" per limitare le modifiche possibili ai pazienti al loro stesso account
 
         //passare un utente con campo password vuoto viene interpretato come password non da modificare,
         //quindi viene usato il valore della password prelevato dal database.
@@ -268,9 +272,10 @@ public class RestUserController {
             paziente.setPassword(bCryptPasswordEncoder.encode(paziente.getPassword()));
         }
 
+        log.info("prova " + paziente.toString());
         pazRepo.save(paziente);
         paziente.setPassword("");
-        return new ResponseEntity<>(paziente, HttpStatus.OK);
+        return HttpStatus.OK;
     }
 
     /**
@@ -295,10 +300,7 @@ public class RestUserController {
     @PreAuthorize("hasAuthority('[ADMIN]')")
     @GetMapping("/getuser/all")
     public @ResponseBody Utente[] getAllUsers() {
-        ArrayList<Utente> users = new ArrayList<>();
-        int i = 0;
-        users = (ArrayList<Utente>) repo.findAll();
-
+        ArrayList<Utente> users = (ArrayList<Utente>) repo.findAll();
         return users.toArray(new Utente[users.size()]);
     }
 
@@ -314,14 +316,14 @@ public class RestUserController {
         Utente u = repo.findByCodiceFiscale(cf);
         if (u == null) return HttpStatus.NOT_FOUND;
 
-        //nel caso in cui l'utente autenticato non sia un amministratore, puo' cancellare solo il suo stesso account
-        if (!authenticatedUser.getAuthorities().equals("[ADMIN]")){
-            if (!authenticatedUser.getPrincipal().equals(cf)) {
-                return HttpStatus.BAD_REQUEST;
-            }
-        }
+        //TODO: usare il request header "requestedBy" per permettere agli utenti normali di cancellare solo il loro stesso account
 
-        repo.deleteByCodiceFiscale(cf);
+        try {
+            repo.deleteByCodiceFiscale(cf);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
         return HttpStatus.OK;
     }
 
@@ -332,7 +334,13 @@ public class RestUserController {
      */
     @PreAuthorize("hasAuthority('[ADMIN]')")
     @DeleteMapping(value="/deleteuser/all")
-    void deleteAllUsers() {
-        repoCustom.deleteAllExceptAdmin();
+    HttpStatus deleteAllUsers() {
+        try {
+            repoCustom.deleteAllExceptAdmin();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return HttpStatus.OK;
     }
 }
